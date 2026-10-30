@@ -1,0 +1,6 @@
+{
+  "name": "SlideCraft Presentation Studio",
+  "description": "Convert Markdown documents into presentation slideshows with custom themes, syntax highlighting, speaker notes, live preview, offline storage syncing, and one-click standalone HTML and PDF exports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
