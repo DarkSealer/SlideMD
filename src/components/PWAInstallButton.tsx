@@ -14,6 +14,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
   const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
   const [showIOSGuide, setShowIOSGuide] = useState(false);
   const [installing, setInstalling] = useState(false);
+  const [showDesktopGuide, setShowDesktopGuide] = useState(false);
 
   // If already running as an installed standalone PWA, hide or show installed badge
   if (isInstalled) {
@@ -117,8 +118,6 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
       </>
     );
   }
-
-  const [showDesktopGuide, setShowDesktopGuide] = useState(false);
 
   // Fallback button for browsers
   return (
