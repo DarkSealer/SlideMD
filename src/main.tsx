@@ -1,5 +1,6 @@
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
+import { Analytics } from '@vercel/analytics/react';
 import 'katex/dist/katex.min.css';
 import './index.css';
 import { registerSW } from 'virtual:pwa-register';
@@ -7,5 +8,10 @@ import { registerSW } from 'virtual:pwa-register';
 // Register PWA service worker with immediate check
 registerSW({ immediate: true });
 
-createRoot(document.getElementById('root')!).render(<App />);
+createRoot(document.getElementById('root')!).render(
+  <>
+    <App />
+    <Analytics />
+  </>,
+);
 
