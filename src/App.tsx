@@ -181,7 +181,7 @@ export default function App() {
     const newDeck: PresentationDeck = {
       id: `deck-${Date.now()}`,
       title: 'Untitled Presentation',
-      description: 'Created with SlideCraft Markdown Studio',
+      description: 'Created with SlideMD Markdown Studio',
       markdown: `# New Presentation Title\nSubtitle or description goes here\n\n---\n\n## First Slide\n\n- Point 1\n- Point 2\n\nNote:\nPresenter speaker notes go here.\n`,
       settings: {
         theme: 'obsidian',

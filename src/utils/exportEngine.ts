@@ -31,7 +31,7 @@ export function generateStandaloneHtml(deck: PresentationDeck): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${escapeHtml(deck.title)} - SlideCraft Presentation</title>
+  <title>${escapeHtml(deck.title)} - SlideMD Presentation</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body, html { width: 100%; height: 100%; overflow: hidden; font-family: 'Outfit', system-ui, -apple-system, sans-serif; background: #000; color: #fff; }

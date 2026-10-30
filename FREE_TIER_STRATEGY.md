@@ -1,8 +1,8 @@
-# SlideCraft: 100% Free Tier Architecture & Product Roadmap
+# SlideMD: 100% Free Tier Architecture & Product Roadmap
 
 ## 1. Zero Infrastructure Cost Guarantee
 
-SlideCraft is architected from the ground up as a **zero-marginal-cost client-side application**. Because computation, storage, and presentation delivery happen in the user's browser, the application can remain **100% free forever** without incurring server bills.
+SlideMD is architected from the ground up as a **zero-marginal-cost client-side application**. Because computation, storage, and presentation delivery happen in the user's browser, the application can remain **100% free forever** without incurring server bills.
 
 ### Cost Breakdown:
 | Resource | Architecture Implementation | Monthly Cost |
@@ -83,7 +83,7 @@ SlideCraft is architected from the ground up as a **zero-marginal-cost client-si
 
 If a paid or monetization tier is introduced in the future, these features represent genuine enterprise/pro value while keeping the core slide builder free:
 
-1. **Cloud URL Sharing & Live Web Presentation Hosting**: Custom short links (e.g. `slidecraft.io/p/my-talk`) with real-time audience view counters.
+1. **Cloud URL Sharing & Live Web Presentation Hosting**: Custom short links (e.g. `slidemd.io/p/my-talk`) with real-time audience view counters.
 2. **Real-Time Remote Control**: Advance slides from your phone via WebSocket or mobile QR controller.
 3. **Team Brand Kits**: Shared corporate themes, custom fonts, and company logos.
 4. **Cloud Auto-Sync**: Multi-device sync across desktop and mobile.

@@ -50,7 +50,7 @@ Highlight the latency drop in APAC region during Q3.
 <div class="slide-hero-quote">
   <div class="slide-quote-glyph">“</div>
   <blockquote class="slide-quote-text">
-    Architecture is the set of decisions you wish you could get right early in a project. SlideCraft made our vision instantly clear to stakeholders.
+    Architecture is the set of decisions you wish you could get right early in a project. SlideMD made our vision instantly clear to stakeholders.
   </blockquote>
   <div class="slide-quote-author">
     <div class="slide-quote-avatar">EV</div>

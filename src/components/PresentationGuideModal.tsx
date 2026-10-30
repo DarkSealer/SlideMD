@@ -68,7 +68,7 @@ export const PresentationGuideModal: React.FC<PresentationGuideModalProps> = ({
       iconColor: 'text-indigo-400 bg-indigo-950/60 border-indigo-700/50',
       badge: 'Basics',
       shortDesc: 'Starts a brand new slide in your presentation.',
-      whatItDoes: 'Creates a clean horizontal transition to the next slide in your presentation. In SlideCraft, three dashes (---) tell the app that a new slide begins here.',
+      whatItDoes: 'Creates a clean horizontal transition to the next slide in your presentation. In SlideMD, three dashes (---) tell the app that a new slide begins here.',
       whenToUse: 'Whenever you start a new topic, section, or key point in your presentation.',
       howToUse: 'Click the "Slide (---)" button, or simply press Enter twice and type three hyphens "---" followed by your slide title with a "#" heading.',
       snippet: '\n\n---\n\n## Next Chapter Title\n\n- Main takeaway or key insight\n- Supporting context\n',
@@ -140,7 +140,7 @@ export const PresentationGuideModal: React.FC<PresentationGuideModalProps> = ({
       shortDesc: 'Formats code with beautiful syntax highlighting.',
       whatItDoes: 'Renders code, formulas, or terminal commands inside an elegant dark card with colorized keywords.',
       whenToUse: 'When showing programming code (JavaScript, Python, HTML, SQL, etc.) or command line commands.',
-      howToUse: 'Wrap your code in three backticks "```" followed by the language name (e.g. ```python). SlideCraft colors it automatically.',
+      howToUse: 'Wrap your code in three backticks "```" followed by the language name (e.g. ```python). SlideMD colors it automatically.',
       snippet: '\n```typescript\nfunction launchRocket(thrust: number): boolean {\n  return thrust > 9000;\n}\n```\n',
       previewType: 'code',
     },
@@ -168,7 +168,7 @@ export const PresentationGuideModal: React.FC<PresentationGuideModalProps> = ({
       shortDesc: 'An eye-catching colored box for important takeaways.',
       whatItDoes: 'Creates a highlighted box that immediately draws attention. Supports [!NOTE] (blue), [!TIP] (green), [!WARNING] (amber), and [!IMPORTANT] (red).',
       whenToUse: 'When there is one critical rule, warning, or golden recommendation you do NOT want anyone to miss.',
-      howToUse: 'Type "> [!NOTE]" or "> [!WARNING]" followed by "> Your text here". SlideCraft styles it with high-contrast text that stays readable on both dark and light themes.',
+      howToUse: 'Type "> [!NOTE]" or "> [!WARNING]" followed by "> Your text here". SlideMD styles it with high-contrast text that stays readable on both dark and light themes.',
       snippet: '\n> [!TIP]\n> Always test your presentation with the projector before your audience arrives!\n',
       previewType: 'callout',
     },
@@ -196,7 +196,7 @@ export const PresentationGuideModal: React.FC<PresentationGuideModalProps> = ({
       shortDesc: 'Create system flowcharts, XY bar/line data charts, sequence diagrams, and mindmaps with simple text.',
       whatItDoes: 'Transforms plain readable text into sharp, interactive vector diagrams and modern charts. Supports "graph TD" flowcharts, "xychart-beta" quantitative bar/line charts, "sequenceDiagram" API request flows, state machines, and pie charts.',
       whenToUse: 'When showing architectures, process workflows, system sequences, user journeys, or data benchmarks instead of static screenshots.',
-      howToUse: 'Click "Diagram" in the Insert bar to pick a template, or type ```mermaid followed by your diagram definition. SlideCraft renders the SVG automatically!',
+      howToUse: 'Click "Diagram" in the Insert bar to pick a template, or type ```mermaid followed by your diagram definition. SlideMD renders the SVG automatically!',
       snippet: `\`\`\`mermaid
 graph LR
     User([End User]) --> API[API Gateway]
@@ -636,7 +636,7 @@ graph LR
                     Make sure text is dark on light backgrounds and bright on dark backgrounds. If a custom theme makes your text hard to read, use the <strong>Color</strong> tool or insert <code className="text-amber-300">&lt;!-- color: #ffffff --&gt;</code> to tune it!
                   </p>
                   <div className="mt-auto pt-2 text-[11px] font-mono text-amber-400 bg-amber-950/30 px-2.5 py-1 rounded border border-amber-900/40">
-                    SlideCraft callouts are automatically high-contrast!
+                    SlideMD callouts are automatically high-contrast!
                   </div>
                 </div>
 
@@ -690,7 +690,7 @@ graph LR
                     </div>
                   </div>
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    SlideCraft includes a built-in dual-screen console. Click <strong>Notes</strong> in the top bar or press <strong>S</strong> during presentation to open your private control deck with:
+                    SlideMD includes a built-in dual-screen console. Click <strong>Notes</strong> in the top bar or press <strong>S</strong> during presentation to open your private control deck with:
                   </p>
                   <ul className="text-xs text-slate-300 space-y-1.5 list-disc pl-5">
                     <li>Current slide preview + upcoming slide preview</li>
@@ -752,7 +752,7 @@ graph LR
           {activeTab === 'markdown' && (
             <div className="flex flex-col gap-4 max-w-4xl mx-auto">
               <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-300">
-                SlideCraft uses standard, friendly Markdown. Here are the core formatting tags you can type directly into the editor:
+                SlideMD uses standard, friendly Markdown. Here are the core formatting tags you can type directly into the editor:
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">

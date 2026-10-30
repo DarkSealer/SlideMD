@@ -38,7 +38,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
         onClick={handleInstallClick}
         disabled={installing}
         className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-emerald-300 hover:text-emerald-100 bg-emerald-950/60 hover:bg-emerald-900/80 rounded-lg border border-emerald-600/50 hover:border-emerald-500 transition-all whitespace-nowrap shadow-sm shadow-emerald-950/40 ${className}`}
-        title="Install SlideCraft as a desktop or mobile application for 100% offline presentations"
+        title="Install SlideMD as a desktop or mobile application for 100% offline presentations"
       >
         <DownloadCloud className="w-3.5 h-3.5 text-emerald-400" />
         <span>{variant === 'full' ? 'Install Offline App' : 'Install App'}</span>
@@ -53,7 +53,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
         <button
           onClick={() => setShowIOSGuide(true)}
           className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 rounded-lg border border-slate-700 transition-all whitespace-nowrap ${className}`}
-          title="Install SlideCraft on iOS (Add to Home Screen)"
+          title="Install SlideMD on iOS (Add to Home Screen)"
         >
           <Smartphone className="w-3.5 h-3.5 text-indigo-400" />
           <span>Install iOS</span>
@@ -64,9 +64,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
             <div className="w-full max-w-sm rounded-2xl bg-slate-900 border border-slate-700 p-6 shadow-2xl text-slate-100">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
-                    <span className="font-bold text-white text-base">S</span>
-                  </div>
+                  <img src="/pwa-192x192.png" alt="" className="w-8 h-8 object-contain" />
                   <h3 className="text-base font-bold text-white">Install on iOS</h3>
                 </div>
                 <button
@@ -131,7 +129,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
           }
         }}
         className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 rounded-lg border border-slate-800 transition-colors whitespace-nowrap ${className}`}
-        title="Install SlideCraft on your device for offline presentation support"
+        title="Install SlideMD on your device for offline presentation support"
       >
         <DownloadCloud className="w-3.5 h-3.5 text-slate-400" />
         <span>Install</span>
@@ -142,10 +140,8 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
           <div className="w-full max-w-sm rounded-2xl bg-slate-900 border border-slate-700 p-6 shadow-2xl text-slate-100">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
-                  <span className="font-bold text-white text-base">S</span>
-                </div>
-                <h3 className="text-base font-bold text-white">Install SlideCraft App</h3>
+                <img src="/pwa-192x192.png" alt="" className="w-8 h-8 object-contain" />
+                <h3 className="text-base font-bold text-white">Install SlideMD App</h3>
               </div>
               <button
                 onClick={() => setShowDesktopGuide(false)}
@@ -166,7 +162,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
               </div>
               <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
                 <span className="font-semibold text-white block mb-1">100% Offline Ready:</span>
-                Once installed, SlideCraft runs without any internet connection directly from your device storage.
+                Once installed, SlideMD runs without any internet connection directly from your device storage.
               </div>
             </div>
 

@@ -64,10 +64,7 @@ export const TopNav: React.FC<TopNavProps> = ({
       {/* Zone 1: Brand & Deck Title */}
       <div className="flex items-center gap-3 min-w-0 shrink">
         <a href="/" className="flex items-center gap-2 text-slate-100 hover:text-white transition-colors shrink-0">
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-inner shadow-indigo-400/30">
-            <span className="font-bold text-white text-base tracking-tight">S</span>
-          </div>
-          <span className="text-base font-bold tracking-tight text-white whitespace-nowrap">SlideCraft</span>
+          <img src="/logo.png" alt="SlideMD" className="h-8 w-auto select-none" draggable={false} />
         </a>
 
         <span className="text-slate-700 hidden sm:inline" aria-hidden="true">/</span>

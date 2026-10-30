@@ -62,9 +62,9 @@ export async function exportToPptx(
   const pres = new pptxgen();
 
   // Set document title and metadata
-  pres.title = deck.title || 'SlideCraft Presentation';
-  pres.subject = deck.description || 'Created with SlideCraft';
-  pres.author = 'SlideCraft';
+  pres.title = deck.title || 'SlideMD Presentation';
+  pres.subject = deck.description || 'Created with SlideMD';
+  pres.author = 'SlideMD';
 
   // Set aspect ratio matching deck settings
   if (deck.settings?.aspectRatio === '4:3') {

@@ -11,11 +11,11 @@ export default defineConfig(() => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.png', 'apple-touch-icon.png', 'icon.svg'],
+        includeAssets: ['favicon.png', 'apple-touch-icon.png', 'logo.png'],
         manifest: {
           id: '/',
-          name: 'SlideCraft Presentation Studio',
-          short_name: 'SlideCraft',
+          name: 'SlideMD Presentation Studio',
+          short_name: 'SlideMD',
           description: 'Convert Markdown into presentation slideshows with live preview, themes, speaker notes, and offline sync.',
           theme_color: '#0f172a',
           background_color: '#020617',

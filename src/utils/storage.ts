@@ -334,7 +334,7 @@ Welcome everyone to the workshop! Ask attendees to make sure their local dev env
 
 ---
 
-## Keyboard Shortcuts in SlideCraft
+## Keyboard Shortcuts in SlideMD
 
 Take control of your presentation:
 

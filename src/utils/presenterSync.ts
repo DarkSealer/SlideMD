@@ -117,7 +117,7 @@ export function launchAudienceWindow(deckId?: string): Window | null {
   }
 
   const features = 'menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=no,width=1280,height=720';
-  const newWin = window.open(url.toString(), 'SlideCraftAudienceDisplay', features);
+  const newWin = window.open(url.toString(), 'SlideMDAudienceDisplay', features);
 
   if (newWin) {
     newWin.focus();

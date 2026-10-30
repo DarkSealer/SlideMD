@@ -144,7 +144,7 @@ gitGraph
     description: 'Brainstorming topics, hierarchical concepts, and feature roadmaps.',
     code: `\`\`\`mermaid
 mindmap
-  root((SlideCraft))
+  root((SlideMD))
     Markdown Engine
       Standard GFM
       Custom Directives
