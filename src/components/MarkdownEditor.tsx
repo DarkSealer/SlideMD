@@ -1,4 +1,5 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Plus,
   StickyNote,
@@ -22,12 +23,86 @@ import {
 } from 'lucide-react';
 import { MERMAID_SNIPPETS } from '../utils/mermaidHelper';
 import { SLIDE_LAYOUT_PATTERNS } from '../utils/slideLayoutSnippets';
+import { useToolbarHint } from './ToolbarHint';
+
+// Renders a dropdown panel in a portal on document.body, positioned under its
+// parent element, so it floats above the editor instead of being clipped by
+// the horizontally scrolling toolbar.
+const FloatingPanel: React.FC<{
+  onClose: () => void;
+  className?: string;
+  children: React.ReactNode;
+}> = ({ onClose, className = '', children }) => {
+  const markerRef = useRef<HTMLSpanElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+
+  useLayoutEffect(() => {
+    const anchor = markerRef.current?.parentElement;
+    if (!anchor) return;
+    const update = () => {
+      const rect = anchor.getBoundingClientRect();
+      const width = panelRef.current?.offsetWidth ?? 0;
+      const left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8));
+      setPos({ top: rect.bottom + 6, left });
+    };
+    update();
+    window.addEventListener('resize', update);
+    window.addEventListener('scroll', update, true);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', update, true);
+    };
+  }, []);
+
+  useEffect(() => {
+    const anchor = markerRef.current?.parentElement;
+    const onPointerDown = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (panelRef.current?.contains(target) || anchor?.contains(target)) return;
+      onClose();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [onClose]);
+
+  return (
+    <>
+      <span ref={markerRef} className="hidden" />
+      {createPortal(
+        <div
+          ref={panelRef}
+          data-hint-panel=""
+          className={className}
+          style={{
+            position: 'fixed',
+            top: pos?.top ?? 0,
+            left: pos?.left ?? 0,
+            visibility: pos ? 'visible' : 'hidden',
+            maxWidth: 'calc(100vw - 16px)',
+            zIndex: 100,
+          }}
+        >
+          {children}
+        </div>,
+        document.body
+      )}
+    </>
+  );
+};
 
 interface MarkdownEditorProps {
   value: string;
   onChange: (value: string) => void;
   onCursorSlideChange?: (slideIndex: number) => void;
-  onOpenGuide?: (initialTab?: 'tools' | 'design' | 'shortcuts' | 'markdown') => void;
+  onOpenGuide?: (initialTab?: 'tools' | 'tour' | 'design' | 'shortcuts' | 'markdown') => void;
   currentSlideIndex: number;
   totalSlides: number;
 }
@@ -46,6 +121,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   const [showColorMenu, setShowColorMenu] = useState(false);
   const [showMermaidMenu, setShowMermaidMenu] = useState(false);
   const [showLayoutMenu, setShowLayoutMenu] = useState(false);
+  const { bind: hintBind, tooltip: hintTooltip } = useToolbarHint(showColorMenu || showMermaidMenu || showLayoutMenu);
 
   // Wrap selected text or insert span with color
   const wrapSelectedTextWithColor = (color: string) => {
@@ -162,13 +238,14 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       onDrop={handleDrop}
     >
       {/* Quick Snippet Bar */}
-      <div className="flex items-center gap-1.5 p-2 bg-slate-900/90 border-b border-slate-800 overflow-x-auto text-xs shrink-0 select-none no-scrollbar">
+      <div className="flex items-center gap-1.5 p-2 bg-slate-900/90 border-b border-slate-800 overflow-x-auto text-xs shrink-0 select-none no-scrollbar" {...hintBind}>
+        {hintTooltip}
         <span className="text-slate-500 font-mono text-[11px] px-1 whitespace-nowrap">Insert:</span>
 
         <button
           onClick={() => insertSnippet('\n\n---\n\n## Slide Title\n\nSlide content...\n\n')}
           className="flex items-center gap-1 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors whitespace-nowrap"
-          title="Slide (---): Starts a new horizontal slide. Use for each new topic or section."
+          data-hint="slide"
         >
           <Plus className="w-3 h-3 text-indigo-400" />
           <span>Slide (---)</span>
@@ -177,7 +254,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         <button
           onClick={() => insertSnippet('\n\n--\n\n### Sub-slide Title\n\nNested content...\n\n')}
           className="flex items-center gap-1 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors whitespace-nowrap"
-          title="Sub-slide (--): Adds a vertical sub-slide under the current one for deep dives or extra data (press Down arrow)."
+          data-hint="subslide"
         >
           <Layers className="w-3 h-3 text-cyan-400" />
           <span>Sub-slide (--)</span>
@@ -186,7 +263,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         <button
           onClick={() => insertSnippet('\n\nNote:\nPresenter speaker note for this slide.\n')}
           className="flex items-center gap-1 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors whitespace-nowrap"
-          title="Speaker Note: Private talking points only visible to YOU in presenter mode (Press 'S' or click Notes)."
+          data-hint="note"
         >
           <StickyNote className="w-3 h-3 text-amber-400" />
           <span>Speaker Note</span>
@@ -195,7 +272,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         <button
           onClick={() => insertSnippet('\n:::fragment\nKey bullet or point appears on click\n:::\n')}
           className="flex items-center gap-1 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors whitespace-nowrap"
-          title="Fragment: Step-by-step animation reveal! Reveals points one click at a time so your audience follows your voice."
+          data-hint="fragment"
         >
           <Sparkles className="w-3 h-3 text-purple-400" />
           <span>Fragment</span>
@@ -204,7 +281,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         <button
           onClick={() => insertSnippet('\n:::columns\n:::column\n### Column 1\nLeft content\n:::column\n### Column 2\nRight content\n:::\n')}
           className="flex items-center gap-1 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors whitespace-nowrap"
-          title="Columns: Splits slide into side-by-side columns for comparisons, Pros vs Cons, or speaker bio."
+          data-hint="columns"
         >
           <Columns className="w-3 h-3 text-emerald-400" />
           <span>Columns</span>
@@ -213,7 +290,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         <button
           onClick={() => insertSnippet('\n```typescript\nfunction solve(input: string): boolean {\n  return true;\n}\n```\n')}
           className="flex items-center gap-1 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors whitespace-nowrap"
-          title="Code Block: Formats computer code with automatic syntax coloring on an elegant dark card."
+          data-hint="code"
         >
           <Code2 className="w-3 h-3 text-sky-400" />
           <span>Code</span>
@@ -222,7 +299,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         <button
           onClick={() => insertSnippet('\n$$\nE = mc^2\n$$\n')}
           className="flex items-center gap-1 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors whitespace-nowrap"
-          title="Math Equation: Mathematical formulas and scientific equations rendered cleanly with LaTeX symbols."
+          data-hint="math"
         >
           <Binary className="w-3 h-3 text-rose-400" />
           <span>Math</span>
@@ -231,7 +308,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         <button
           onClick={() => insertSnippet('\n> [!NOTE]\n> Strategic insight or key takeaway.\n')}
           className="flex items-center gap-1 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors whitespace-nowrap"
-          title="Callout: Eye-catching colored card (Note, Pro Tip, Warning, Important) for big takeaways."
+          data-hint="callout"
         >
           <AlertCircle className="w-3 h-3 text-yellow-400" />
           <span>Callout</span>
@@ -240,7 +317,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         <button
           onClick={() => insertSnippet('\n| Item | Metric | Status |\n| :--- | :--- | :--- |\n| Alpha | 99.8% | Active |\n| Beta | 42 ms | Ready |\n')}
           className="flex items-center gap-1 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors whitespace-nowrap"
-          title="Table: Formatted grid with rows and columns for pricing, timelines, benchmarks, and data."
+          data-hint="table"
         >
           <Table className="w-3 h-3 text-slate-300" />
           <span>Table</span>
@@ -255,7 +332,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               setShowColorMenu(false);
             }}
             className="flex items-center gap-1 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors whitespace-nowrap"
-            title="Pre-Built Slide Layouts: KPI Metric Grid, Hero Quote, Before/After Comparison, Timeline Roadmap, and Team Showcase"
+            data-hint="layouts"
           >
             <LayoutGrid className="w-3 h-3 text-indigo-400" />
             <span>Layouts</span>
@@ -263,7 +340,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
           </button>
 
           {showLayoutMenu && (
-            <div className="absolute top-8 left-0 w-80 bg-slate-900 border border-slate-700 rounded-xl p-2.5 shadow-2xl backdrop-blur-md z-30 flex flex-col gap-2 animate-in fade-in slide-in-from-top-1">
+            <FloatingPanel onClose={() => setShowLayoutMenu(false)} className="w-80 bg-slate-900 border border-slate-700 rounded-xl p-2.5 shadow-2xl backdrop-blur-md flex flex-col gap-2">
               <div className="flex items-center justify-between text-[11px] font-semibold text-slate-300 pb-1 border-b border-slate-800">
                 <span className="flex items-center gap-1.5">
                   <LayoutGrid className="w-3.5 h-3.5 text-indigo-400" />
@@ -293,6 +370,8 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                   return (
                     <button
                       key={pattern.id}
+                      data-hint={`layout:${pattern.id}`}
+                      data-hint-side="right"
                       onClick={() => {
                         insertSnippet(`\n\n${pattern.snippet.trim()}\n\n`);
                         setShowLayoutMenu(false);
@@ -321,7 +400,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                 <span>Semantic Markdown & responsive CSS</span>
                 <span className="text-indigo-400 font-medium">1-Click Insert</span>
               </div>
-            </div>
+            </FloatingPanel>
           )}
         </div>
 
@@ -330,7 +409,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
           <button
             onClick={() => setShowMermaidMenu(!showMermaidMenu)}
             className="flex items-center gap-1 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors whitespace-nowrap"
-            title="Mermaid Diagrams & Charts: Insert Flowcharts, XY Charts, Sequence Diagrams, State Machines, Pie Charts, and more."
+            data-hint="diagram"
           >
             <Workflow className="w-3 h-3 text-emerald-400" />
             <span>Diagram</span>
@@ -338,7 +417,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
           </button>
 
           {showMermaidMenu && (
-            <div className="absolute top-8 left-0 w-80 bg-slate-900 border border-slate-700 rounded-xl p-2.5 shadow-2xl backdrop-blur-md z-30 flex flex-col gap-2">
+            <FloatingPanel onClose={() => setShowMermaidMenu(false)} className="w-80 bg-slate-900 border border-slate-700 rounded-xl p-2.5 shadow-2xl backdrop-blur-md flex flex-col gap-2">
               <div className="flex items-center justify-between text-[11px] font-semibold text-slate-300 pb-1 border-b border-slate-800">
                 <span className="flex items-center gap-1.5">
                   <Workflow className="w-3.5 h-3.5 text-emerald-400" />
@@ -356,6 +435,8 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                 {MERMAID_SNIPPETS.map((snippet) => (
                   <button
                     key={snippet.id}
+                    data-hint={`diagram:${snippet.id}`}
+                    data-hint-side="right"
                     onClick={() => {
                       insertSnippet(`\n\n${snippet.code}\n\n`);
                       setShowMermaidMenu(false);
@@ -381,7 +462,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                 <span>Renders live responsive SVG charts</span>
                 <code className="text-emerald-400 font-mono text-[9px]">```mermaid</code>
               </div>
-            </div>
+            </FloatingPanel>
           )}
         </div>
 
@@ -390,14 +471,14 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
           <button
             onClick={() => setShowColorMenu(!showColorMenu)}
             className="flex items-center gap-1 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors whitespace-nowrap"
-            title="Color Tool: Change text color to highlight key phrases or make text easier to read on any theme."
+            data-hint="color"
           >
             <Palette className="w-3 h-3 text-pink-400" />
             <span>Color</span>
           </button>
 
           {showColorMenu && (
-            <div className="absolute top-8 left-0 w-56 bg-slate-900 border border-slate-700 rounded-xl p-2.5 shadow-2xl backdrop-blur-md z-30 flex flex-col gap-2">
+            <FloatingPanel onClose={() => setShowColorMenu(false)} className="w-56 bg-slate-900 border border-slate-700 rounded-xl p-2.5 shadow-2xl backdrop-blur-md flex flex-col gap-2">
               <div className="flex items-center justify-between text-[11px] font-semibold text-slate-300 pb-1 border-b border-slate-800">
                 <span>Colorize Text</span>
                 <button onClick={() => setShowColorMenu(false)} className="text-slate-400 hover:text-white">✕</button>
@@ -425,7 +506,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               <div className="text-[10px] text-slate-400 pt-1 border-t border-slate-800">
                 Wraps selected text in <code className="text-pink-300">&lt;span style=&quot;color: ...&quot;&gt;</code>
               </div>
-            </div>
+            </FloatingPanel>
           )}
         </div>
 
@@ -440,7 +521,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
           <button
             onClick={() => fileInputRef.current?.click()}
             className="flex items-center gap-1 px-2 py-1 rounded bg-indigo-950/60 hover:bg-indigo-900 text-indigo-300 border border-indigo-800/60 transition-colors whitespace-nowrap"
-            title="Import an existing .md file"
+            data-hint="upload"
           >
             <Upload className="w-3 h-3" />
             <span>Upload .md</span>

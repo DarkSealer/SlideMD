@@ -37,7 +37,7 @@ export default function App() {
   const [showDecksModal, setShowDecksModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
-  const [guideInitialTab, setGuideInitialTab] = useState<'tools' | 'design' | 'shortcuts' | 'markdown'>('tools');
+  const [guideInitialTab, setGuideInitialTab] = useState<'tools' | 'tour' | 'design' | 'shortcuts' | 'markdown'>('tools');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showPresenterConsole, setShowPresenterConsole] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(Date.now());
@@ -236,7 +236,7 @@ export default function App() {
     setTimeout(() => setNotification(null), 3000);
   };
 
-  const handleOpenGuide = (tab: 'tools' | 'design' | 'shortcuts' | 'markdown' = 'tools') => {
+  const handleOpenGuide = (tab: 'tools' | 'tour' | 'design' | 'shortcuts' | 'markdown' = 'tools') => {
     setGuideInitialTab(tab);
     setShowGuideModal(true);
   };
