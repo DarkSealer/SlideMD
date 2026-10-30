@@ -165,7 +165,6 @@ let currentThemeMode: 'light' | 'dark' | null = null;
 
 export function initializeMermaid(isLight: boolean = false) {
   const targetMode = isLight ? 'light' : 'dark';
-  if (currentThemeMode === targetMode) return;
 
   mermaid.initialize({
     startOnLoad: false,
@@ -280,24 +279,24 @@ export function initializeMermaid(isLight: boolean = false) {
     flowchart: {
       htmlLabels: true,
       curve: 'basis', // Smooth, modern bezier curves
-      padding: 14,
-      nodeSpacing: 40,
-      rankSpacing: 40,
+      padding: 18,
+      nodeSpacing: 42,
+      rankSpacing: 45,
       useMaxWidth: true,
     },
     sequence: {
       diagramMarginX: 30,
-      diagramMarginY: 30,
+      diagramMarginY: 20,
       actorMargin: 50,
       width: 140,
       height: 44,
       boxMargin: 10,
       boxTextMargin: 5,
       noteMargin: 10,
-      messageMargin: 35,
+      messageMargin: 32,
       messageAlign: 'center',
       mirrorActors: true,
-      bottomMarginAdj: 20,
+      bottomMarginAdj: 15,
       useMaxWidth: true,
     },
     gantt: {
@@ -379,12 +378,75 @@ export async function renderAllMermaidInContainer(
         svgEl.removeAttribute('height');
         svgEl.removeAttribute('width');
         svgEl.style.maxWidth = '100%';
-        svgEl.style.maxHeight = '390px';
-        svgEl.style.width = 'auto';
+        svgEl.style.maxHeight = '380px';
+        svgEl.style.width = '100%';
         svgEl.style.height = 'auto';
         svgEl.style.display = 'block';
         svgEl.style.margin = '0 auto';
+        svgEl.style.overflow = 'visible';
         svgEl.classList.add('mermaid-svg');
+
+        // Ensure foreignObject and inner paragraph elements never clip node text or icons
+        const foreignObjects = svgEl.querySelectorAll('foreignObject');
+        foreignObjects.forEach((fo) => {
+          fo.setAttribute('overflow', 'visible');
+          (fo as HTMLElement).style.overflow = 'visible';
+
+          const rawW = parseFloat(fo.getAttribute('width') || '0');
+          const rawH = parseFloat(fo.getAttribute('height') || '0');
+          if (rawW > 0 && rawH > 0) {
+            const padX = 16;
+            const padY = 10;
+            fo.setAttribute('width', String(rawW + padX));
+            fo.setAttribute('height', String(rawH + padY));
+
+            const parentG = fo.parentElement;
+            const translateRegex = /translate\(\s*([-\d.]+)\s*(?:,\s*|\s+)([-\d.]+)\s*\)/;
+            const foTransform = fo.getAttribute('transform') || '';
+            const parentTransform = parentG?.getAttribute('transform') || '';
+
+            if (translateRegex.test(foTransform)) {
+              fo.setAttribute(
+                'transform',
+                foTransform.replace(translateRegex, (_, tx, ty) => {
+                  return `translate(${parseFloat(tx) - padX / 2}, ${parseFloat(ty) - padY / 2})`;
+                })
+              );
+            } else if (parentG && translateRegex.test(parentTransform)) {
+              parentG.setAttribute(
+                'transform',
+                parentTransform.replace(translateRegex, (_, tx, ty) => {
+                  return `translate(${parseFloat(tx) - padX / 2}, ${parseFloat(ty) - padY / 2})`;
+                })
+              );
+            } else if (fo.hasAttribute('x') || fo.hasAttribute('y')) {
+              const x = parseFloat(fo.getAttribute('x') || '0');
+              const y = parseFloat(fo.getAttribute('y') || '0');
+              fo.setAttribute('x', String(x - padX / 2));
+              fo.setAttribute('y', String(y - padY / 2));
+            }
+          }
+
+          const innerDiv = fo.querySelector('div') as HTMLElement | null;
+          if (innerDiv) {
+            innerDiv.style.display = 'flex';
+            innerDiv.style.alignItems = 'center';
+            innerDiv.style.justifyContent = 'center';
+            innerDiv.style.width = '100%';
+            innerDiv.style.height = '100%';
+            innerDiv.style.overflow = 'visible';
+            innerDiv.style.lineHeight = '1.2';
+            innerDiv.style.whiteSpace = 'nowrap';
+          }
+        });
+
+        const paragraphs = svgEl.querySelectorAll('p');
+        paragraphs.forEach((p) => {
+          p.style.margin = '0';
+          p.style.padding = '0';
+          p.style.fontSize = '13px';
+          p.style.lineHeight = '1.2';
+        });
 
         // Remove blurry muddy drop-shadow filters from SVG defs
         const filters = svgEl.querySelectorAll('filter');

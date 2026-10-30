@@ -28,6 +28,8 @@ export const FullscreenPresentation: React.FC<FullscreenPresentationProps> = ({
   onClose,
   onOpenPresenterNotes,
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [currentFragment, setCurrentFragment] = useState(0);
   const [slideDirection, setSlideDirection] = useState<'next' | 'prev'>('next');
@@ -60,6 +62,43 @@ export const FullscreenPresentation: React.FC<FullscreenPresentationProps> = ({
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
+
+  // Handle dynamic container scaling to maintain 16:9 or 4:3 aspect ratio in fullscreen
+  useEffect(() => {
+    const updateScale = () => {
+      if (!containerRef.current) return;
+      const { clientWidth, clientHeight } = containerRef.current;
+      const targetWidth = 1280;
+      const targetHeight = settings.aspectRatio === '4:3' ? 960 : 720;
+
+      const availableW = Math.max(100, clientWidth - 20);
+      const availableH = Math.max(100, clientHeight - 20);
+
+      const scaleW = availableW / targetWidth;
+      const scaleH = availableH / targetHeight;
+      const nextScale = Math.min(scaleW, scaleH);
+      setScale(Math.max(nextScale, 0.15));
+    };
+
+    updateScale();
+    window.addEventListener('resize', updateScale);
+
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined' && containerRef.current) {
+      resizeObserver = new ResizeObserver(() => {
+        updateScale();
+      });
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateScale);
+      if (resizeObserver) resizeObserver.disconnect();
+    };
+  }, [settings.aspectRatio]);
+
+  const baseWidth = 1280;
+  const baseHeight = settings.aspectRatio === '4:3' ? 960 : 720;
 
   // Track slide index changes and initialize fragment count according to navigation direction
   useEffect(() => {
@@ -197,52 +236,68 @@ export const FullscreenPresentation: React.FC<FullscreenPresentationProps> = ({
         </div>
       )}
 
-      {/* Main Slide Presentation Stage */}
-      {(() => {
-        const isLightBg = isColorLight(currentSlide.backgroundColor) || theme.category === 'light';
-        return (
-          <div
-            data-theme-category={isLightBg ? 'light' : 'dark'}
-            className={`w-full h-full max-w-[177.78vh] max-h-[56.25vw] aspect-video relative flex flex-col ${
-              settings.centerSlides ? 'justify-center' : 'justify-start'
-            } p-12 md:p-20 ${font.fontClass} ${currentSlide.backgroundColor ? '' : theme.bgClass} ${
-              isLightBg ? 'theme-light' : 'theme-dark dark'
-            } shadow-2xl transition-all duration-300`}
-            style={{
-              backgroundColor: currentSlide.backgroundColor || undefined,
-              perspective: '1200px',
-            }}
-          >
+      {/* Main Slide Presentation Stage Container */}
+      <div
+        ref={containerRef}
+        className="w-full h-full flex items-center justify-center p-4 relative overflow-hidden"
+      >
+        {/* Scaled Presentation Slide Box */}
+        {(() => {
+          const isLightBg = isColorLight(currentSlide.backgroundColor) || theme.category === 'light';
+          return (
             <div
-              key={`${currentSlide.id}-${currentIndex}`}
-              ref={slideContentRef}
-              className={`slide-content-wrapper prose max-w-none ${getTransitionClass()}`}
-              style={{ color: currentSlide.customTextColor || (isLightBg ? '#0f172a' : '#f1f5f9') }}
-              dangerouslySetInnerHTML={{ __html: currentSlide.htmlContent }}
-            />
-
-            {/* Progress Bar */}
-            {settings.showProgressBar && (
-              <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-slate-800/40">
+              data-theme-category={isLightBg ? 'light' : 'dark'}
+              style={{
+                width: `${baseWidth}px`,
+                height: `${baseHeight}px`,
+                transform: `scale(${scale})`,
+                transformOrigin: 'center center',
+                backgroundColor: currentSlide.backgroundColor || undefined,
+                perspective: '1200px',
+              }}
+              className={`relative shadow-2xl rounded-xl overflow-hidden border shrink-0 ${
+                isLightBg ? 'border-slate-300' : theme.borderClass
+              } ${font.fontClass} ${
+                currentSlide.backgroundColor ? '' : theme.bgClass
+              } ${isLightBg ? 'theme-light' : 'theme-dark dark'} flex flex-col transition-all duration-300`}
+            >
+              <div
+                className="flex-1 p-12 flex flex-col justify-start overflow-y-auto leading-relaxed"
+              >
                 <div
-                  className="h-full transition-all duration-300"
-                  style={{
-                    width: `${((currentIndex + 1) / slides.length) * 100}%`,
-                    backgroundColor: theme.accentColor,
-                  }}
+                  key={`${currentSlide.id}-${currentIndex}`}
+                  ref={slideContentRef}
+                  className={`slide-content-wrapper prose max-w-none w-full ${
+                    settings.centerSlides ? 'my-auto' : ''
+                  } ${getTransitionClass()}`}
+                  style={{ color: currentSlide.customTextColor || (isLightBg ? '#0f172a' : '#f1f5f9') }}
+                  dangerouslySetInnerHTML={{ __html: currentSlide.htmlContent }}
                 />
               </div>
-            )}
 
-            {/* Slide Counter */}
-            {settings.showSlideNumbers && (
-              <div className={`absolute bottom-4 right-6 text-sm font-mono opacity-60 ${isLightBg ? 'text-slate-700' : 'text-slate-300'}`}>
-                {currentIndex + 1} / {slides.length}
-              </div>
-            )}
-          </div>
-        );
-      })()}
+              {/* Progress Bar */}
+              {settings.showProgressBar && (
+                <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-slate-800/40">
+                  <div
+                    className="h-full transition-all duration-300"
+                    style={{
+                      width: `${((currentIndex + 1) / slides.length) * 100}%`,
+                      backgroundColor: theme.accentColor,
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Slide Counter */}
+              {settings.showSlideNumbers && (
+                <div className={`absolute bottom-4 right-6 text-sm font-mono opacity-60 ${isLightBg ? 'text-slate-700' : 'text-slate-300'}`}>
+                  {currentIndex + 1} / {slides.length}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+      </div>
 
       {/* Laser Pointer Red Glow Effect */}
       {isLaserActive && (

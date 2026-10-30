@@ -119,34 +119,45 @@ pre code.hljs {
 }
 
 /* Slide Typography and Component Classes */
+.slide-content-wrapper > :first-child {
+  margin-top: 0 !important;
+}
+
+.slide-content-wrapper > :last-child {
+  margin-bottom: 0 !important;
+}
+
 .slide-content-wrapper h1 {
-  font-size: clamp(2rem, 3.8vw, 3.4rem);
+  font-size: 2.75rem;
   font-weight: 700;
   line-height: 1.15;
-  margin-bottom: 0.8rem;
+  margin-top: 0;
+  margin-bottom: 0.75rem;
   letter-spacing: -0.02em;
 }
 
 .slide-content-wrapper h2 {
-  font-size: clamp(1.6rem, 3vw, 2.5rem);
+  font-size: 2.15rem;
   font-weight: 650;
   line-height: 1.2;
-  margin-bottom: 0.75rem;
+  margin-top: 0;
+  margin-bottom: 0.65rem;
   letter-spacing: -0.015em;
 }
 
 .slide-content-wrapper h3 {
-  font-size: clamp(1.25rem, 2.2vw, 1.8rem);
+  font-size: 1.65rem;
   font-weight: 600;
   line-height: 1.25;
-  margin-bottom: 0.6rem;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
 }
 
 .slide-content-wrapper p,
 .slide-content-wrapper li {
-  font-size: clamp(0.95rem, 1.5vw, 1.2rem);
-  line-height: 1.6;
-  margin-bottom: 0.6rem;
+  font-size: 1.1rem;
+  line-height: 1.55;
+  margin-bottom: 0.55rem;
 }
 
 .slide-content-wrapper ul {
@@ -582,10 +593,14 @@ pre code.hljs {
 .theme-light .slide-content-wrapper p,
 .theme-light .slide-content-wrapper li,
 [data-theme-category="light"] .slide-content-wrapper p,
+[data-theme-category="light"] .slide-content-wrapper li {
+  color: #334155;
+}
+
 /* Mermaid Diagram Modern Presentation Styling */
 .slide-mermaid-wrapper {
   width: 100%;
-  margin: 1rem 0;
+  margin: 0.75rem 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -595,16 +610,16 @@ pre code.hljs {
 .slide-mermaid-render {
   width: 100%;
   max-width: 980px;
-  max-height: 450px;
+  max-height: 420px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 1rem;
-  padding: 1.25rem 1.25rem 1.75rem 1.25rem;
+  padding: 1.25rem 1.5rem;
   background: radial-gradient(ellipse at top, rgba(30, 27, 75, 0.45), rgba(15, 23, 42, 0.75));
   border: 1px solid rgba(99, 102, 241, 0.3);
   backdrop-filter: blur(12px);
-  overflow: visible;
+  overflow: hidden;
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   position: relative;
 }
@@ -618,11 +633,33 @@ pre code.hljs {
 
 .slide-mermaid-render svg {
   max-width: 100% !important;
-  max-height: 400px !important;
-  width: auto !important;
+  max-height: 380px !important;
+  width: 100% !important;
   height: auto !important;
   display: block;
   margin: 0 auto;
+  overflow: visible !important;
+}
+
+/* Prevent slide typography rules (.slide-content-wrapper p) from inflating Mermaid HTML labels */
+.slide-mermaid-render p,
+.slide-mermaid-render .nodeLabel p,
+.slide-mermaid-render .edgeLabel p,
+.slide-mermaid-render .label p {
+  font-size: 13px !important;
+  line-height: 1.2 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Ensure SVG foreignObject containers never clip node text or icons */
+.slide-mermaid-render foreignObject {
+  overflow: visible !important;
+}
+
+.slide-mermaid-render foreignObject > div {
+  overflow: visible !important;
+  line-height: 1.2 !important;
 }
 
 /* Eliminate Mermaid's default blurry/muddy SVG filters */
@@ -654,33 +691,27 @@ pre code.hljs {
   stroke-width: 1.5px !important;
 }
 
-/* Pill badge styling for edge labels (Yes / No / conditions) */
+/* Edge labels (Yes / No / conditions) */
 .slide-mermaid-render .edgeLabel {
   background-color: transparent !important;
+  overflow: visible !important;
 }
 
 .slide-mermaid-render .edgeLabel .label {
-  background: #0f172a !important;
-  border: 1px solid rgba(99, 102, 241, 0.5) !important;
-  border-radius: 9999px !important;
-  padding: 3px 10px !important;
-  font-size: 11px !important;
-  font-weight: 600 !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
   color: #c7d2fe !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+  overflow: visible !important;
 }
 
 .theme-light .slide-mermaid-render .edgeLabel .label,
 [data-theme-category="light"] .slide-mermaid-render .edgeLabel .label {
-  background: #ffffff !important;
-  border: 1px solid rgba(99, 102, 241, 0.4) !important;
   color: #3730a3 !important;
-  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.12) !important;
 }
 
 .slide-mermaid-render .label-container {
-  rx: 9999px !important;
-  ry: 9999px !important;
+  rx: 8px !important;
+  ry: 8px !important;
   stroke-width: 1px !important;
 }
 
@@ -688,8 +719,10 @@ pre code.hljs {
 .slide-mermaid-render .nodeLabel,
 .slide-mermaid-render .label {
   font-family: inherit !important;
-  font-weight: 600 !important;
-  letter-spacing: -0.01em !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+  overflow: visible !important;
 }
 
 .theme-light .slide-mermaid-render text,

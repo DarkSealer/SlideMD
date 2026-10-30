@@ -451,15 +451,15 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
 
           {/* Slide Inner Body */}
           <div
-            className={`flex-1 p-14 flex flex-col ${
-              settings.centerSlides ? 'justify-center' : 'justify-start'
-            } overflow-y-auto leading-relaxed`}
+            className="flex-1 p-12 flex flex-col justify-start overflow-y-auto leading-relaxed"
             style={{ perspective: '1200px' }}
           >
             <div
               key={`${currentSlide.id}-${currentIndex}-${previewTransitionTrigger}`}
               ref={slideContentRef}
-              className={`slide-content-wrapper prose max-w-none ${getTransitionClass()}`}
+              className={`slide-content-wrapper prose max-w-none w-full ${
+                settings.centerSlides ? 'my-auto' : ''
+              } ${getTransitionClass()}`}
               style={{ color: effectiveTextColor }}
               dangerouslySetInnerHTML={{ __html: currentSlide.htmlContent }}
             />
