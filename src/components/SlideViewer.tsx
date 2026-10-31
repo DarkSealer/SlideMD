@@ -179,14 +179,19 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
     }
   };
 
-  // Laser pointer mouse move tracker
+  // Laser pointer mouse move tracker (uses viewport clientX/clientY matching fixed position)
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isLaserPointerActive) return;
-    const rect = e.currentTarget.getBoundingClientRect();
     setLaserPos({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
+      x: e.clientX,
+      y: e.clientY,
     });
+  };
+
+  const handleMouseLeave = () => {
+    if (isLaserPointerActive) {
+      setLaserPos({ x: -100, y: -100 });
+    }
   };
 
   const baseWidth = 1280;
@@ -424,8 +429,11 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
       {/* Main Slide Presentation Stage Viewport */}
       <div
         ref={containerRef}
-        className="flex-1 flex items-center justify-center p-2 sm:p-3 overflow-hidden relative bg-slate-950/80 w-full h-full"
+        className={`flex-1 flex items-center justify-center p-2 sm:p-3 overflow-hidden relative bg-slate-950/80 w-full h-full ${
+          isLaserPointerActive ? 'cursor-crosshair' : ''
+        }`}
         onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
         onMouseUp={handleCaptureSelection}
       >
         {/* Scaled Presentation Slide Box */}
@@ -492,7 +500,7 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
         {isLaserPointerActive && (
           <div
             className="pointer-events-none fixed z-50 w-5 h-5 rounded-full bg-red-500 shadow-[0_0_15px_6px_rgba(239,68,68,0.8)] -translate-x-1/2 -translate-y-1/2"
-            style={{ left: laserPos.x, top: laserPos.y }}
+            style={{ left: `${laserPos.x}px`, top: `${laserPos.y}px` }}
           />
         )}
 
