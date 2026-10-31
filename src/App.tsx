@@ -15,6 +15,7 @@ import { TopNav } from './components/TopNav';
 import { MarkdownEditor } from './components/MarkdownEditor';
 import { SlideViewer } from './components/SlideViewer';
 import { SlideThumbnailStrip } from './components/SlideThumbnailStrip';
+import { AppFooter } from './components/AppFooter';
 import { FullscreenPresentation } from './components/FullscreenPresentation';
 import { PresenterModal } from './components/PresenterModal';
 import { ExportModal } from './components/ExportModal';
@@ -386,6 +387,8 @@ export default function App() {
           settings={activeDeck.settings}
         />
       )}
+
+      <AppFooter />
 
       {/* Fullscreen Conference Presentation Mode */}
       {isFullscreen && (
