@@ -232,18 +232,19 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
       onKeyDown={handleKeyDown}
     >
       {/* Slide Canvas Header Controls */}
-      <div className="h-10 px-4 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between text-xs text-slate-300 shrink-0">
-        <div className="flex items-center gap-3">
-          <span className="font-semibold text-slate-200">
+      {/* Slide Canvas Header Controls */}
+      <div className="h-10 px-2 sm:px-4 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between gap-2 text-xs text-slate-300 shrink-0 overflow-hidden">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 shrink">
+          <span className="font-semibold text-slate-200 whitespace-nowrap">
             Slide {currentIndex + 1} of {slides.length}
           </span>
-          <span className="text-slate-600">·</span>
-          <span className="text-slate-400 capitalize">{theme.name}</span>
-          <span className="text-slate-600">·</span>
-          <span className="text-slate-400 font-mono text-[11px]">{settings.aspectRatio}</span>
+          <span className="text-slate-600 hidden md:inline">·</span>
+          <span className="text-slate-400 capitalize truncate max-w-[100px] hidden md:inline">{theme.name}</span>
+          <span className="text-slate-600 hidden lg:inline">·</span>
+          <span className="text-slate-400 font-mono text-[11px] hidden lg:inline">{settings.aspectRatio}</span>
           {currentSlide.customTextColor && (
             <span
-              className="px-1.5 py-0.5 rounded text-[10px] font-mono border"
+              className="px-1.5 py-0.5 rounded text-[10px] font-mono border hidden xl:inline"
               style={{
                 borderColor: currentSlide.customTextColor,
                 color: currentSlide.customTextColor,
@@ -254,7 +255,7 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
           )}
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1 shrink-0">
           {/* Text Color Picker Tool */}
           <div className="relative">
             <button
@@ -267,7 +268,8 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
               title="Change text color (syncs to .md file)"
             >
               <Palette className="w-3.5 h-3.5" style={{ color: currentSlide.customTextColor || selectedColor }} />
-              <span className="hidden sm:inline">Text Color</span>
+              <span className="hidden lg:inline">Text Color</span>
+              <span className="hidden sm:inline lg:hidden">Color</span>
             </button>
 
             {showColorPicker && (
@@ -390,7 +392,7 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
             title="Toggle Laser Pointer"
           >
             <Radio className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Laser</span>
+            <span className="hidden md:inline">Laser</span>
           </button>
 
           {/* Speaker Notes Drawer Toggle */}
@@ -404,7 +406,7 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
             title="Peek Speaker Notes"
           >
             <StickyNote className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Notes</span>
+            <span className="hidden md:inline">Notes</span>
           </button>
 
           {/* Fullscreen Mode Button */}

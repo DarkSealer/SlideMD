@@ -41,7 +41,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
         title="Install SlideMD as a desktop or mobile application for 100% offline presentations"
       >
         <DownloadCloud className="w-3.5 h-3.5 text-emerald-400" />
-        <span>{variant === 'full' ? 'Install Offline App' : 'Install App'}</span>
+        <span className="hidden xl:inline">{variant === 'full' ? 'Install Offline App' : 'Install App'}</span>
       </button>
     );
   }
@@ -56,7 +56,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
           title="Install SlideMD on iOS (Add to Home Screen)"
         >
           <Smartphone className="w-3.5 h-3.5 text-indigo-400" />
-          <span>Install iOS</span>
+          <span className="hidden xl:inline">Install iOS</span>
         </button>
 
         {showIOSGuide && (
@@ -132,7 +132,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
         title="Install SlideMD on your device for offline presentation support"
       >
         <DownloadCloud className="w-3.5 h-3.5 text-slate-400" />
-        <span>Install</span>
+        <span className="hidden xl:inline">Install</span>
       </button>
 
       {showDesktopGuide && (

@@ -96,8 +96,8 @@ export const DecksLibraryModal: React.FC<DecksLibraryModalProps> = ({
               <FolderOpen className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white">Presentation Library</h2>
-              <p className="text-xs text-slate-400">Stored offline in LocalStorage · Synced across sessions</p>
+              <h2 className="text-base font-bold text-white">Examples & Deck Library</h2>
+              <p className="text-xs text-slate-400">Sample presentations, templates & offline saved decks</p>
             </div>
           </div>
 
@@ -156,7 +156,7 @@ export const DecksLibraryModal: React.FC<DecksLibraryModalProps> = ({
             }`}
           >
             <Sparkles className="w-3 h-3 text-amber-400" />
-            <span>Starter Templates ({STARTER_TEMPLATES.length})</span>
+            <span>Examples & Templates ({STARTER_TEMPLATES.length})</span>
           </button>
         </div>
 
