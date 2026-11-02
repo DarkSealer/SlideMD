@@ -390,7 +390,7 @@ export async function renderAllMermaidInContainer(
         const foreignObjects = svgEl.querySelectorAll('foreignObject');
         foreignObjects.forEach((fo) => {
           fo.setAttribute('overflow', 'visible');
-          (fo as HTMLElement).style.overflow = 'visible';
+          (fo as unknown as HTMLElement).style.overflow = 'visible';
 
           const rawW = parseFloat(fo.getAttribute('width') || '0');
           const rawH = parseFloat(fo.getAttribute('height') || '0');

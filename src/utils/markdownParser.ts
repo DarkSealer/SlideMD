@@ -10,6 +10,79 @@ marked.setOptions({
 });
 
 /**
+ * Repairs flattened or single-line `:::columns`, `:::column`, `:::fragment`, and closing `:::` directives
+ * (outside of fenced code blocks) so multi-column layouts and fragments always parse cleanly.
+ */
+export function normalizeSlideDirectives(markdownText: string): string {
+  if (!markdownText) return markdownText;
+  const rawLines = markdownText.replace(/\r\n/g, '\n').split('\n');
+  const normalizedLines: string[] = [];
+  let inCodeBlock = false;
+
+  for (let i = 0; i < rawLines.length; i++) {
+    let line = rawLines[i];
+    if (line.trim().startsWith('```')) {
+      inCodeBlock = !inCodeBlock;
+      normalizedLines.push(line);
+      continue;
+    }
+
+    if (inCodeBlock) {
+      normalizedLines.push(line);
+      continue;
+    }
+
+    // 1. Split before any mid-line :::columns, :::column, :::col, :::fragment, or closing :::
+    line = line.replace(
+      /(\S)[ \t]+(:{3,}(?:columns|column|col|fragment|mermaid|notes)\b)/gi,
+      '$1\n$2'
+    );
+    line = line.replace(/(\S)[ \t]+(:{3,})(?=\s*$)/g, '$1\n$2');
+
+    // 2. Split after :::columns or :::fragment when followed on the same line by content or directives
+    line = line.replace(
+      /^(\s*:{3,}columns)[ \t]+((?:::{3,}|\*\*|#|-\s|<|\d+\.).*)$/gim,
+      '$1\n$2'
+    );
+    line = line.replace(/^(\s*:{3,}fragment)[ \t]+(\S.*)$/gim, '$1\n$2');
+
+    // 3. Split after :::column [optional width] when followed on the same line by content
+    line = line.replace(
+      /^(\s*:{3,}(?:column|col)(?:[ \t]+\d+(?:\.\d+)?%?)?)[ \t]+(\S.*)$/gim,
+      '$1\n$2'
+    );
+
+    const subLines = line.split('\n');
+    for (const sub of subLines) {
+      normalizedLines.push(sub);
+    }
+  }
+
+  // 4. Inside :::columns ... ::: blocks, split multiple "**Label:** Value **Label2:** Value2" that got joined onto one line
+  let inColumns = false;
+  const finalLines = normalizedLines.map((line) => {
+    const trimmed = line.trim();
+    if (/^:{3,}columns\b/i.test(trimmed)) {
+      inColumns = true;
+      return line;
+    }
+    if (inColumns && /^:{3,}\s*$/.test(trimmed)) {
+      inColumns = false;
+      return line;
+    }
+    if (inColumns && !trimmed.startsWith(':::')) {
+      return line.replace(
+        /(\*\*[^*\n]+:\*\*[ \t]+[^*\n]+?)[ \t]+(\*\*[^*\n]+:\*\*)/g,
+        '$1  \n$2'
+      );
+    }
+    return line;
+  });
+
+  return finalLines.join('\n');
+}
+
+/**
  * Parses raw Markdown text into a structured array of slides (both horizontal and vertical).
  */
 export function parseMarkdownToSlides(markdownText: string): SlideContent[] {
@@ -28,8 +101,8 @@ export function parseMarkdownToSlides(markdownText: string): SlideContent[] {
     ];
   }
 
-  // Normalize line breaks
-  const normalizedText = markdownText.replace(/\r\n/g, '\n');
+  // Normalize line breaks and self-heal any flattened column/fragment directives
+  const normalizedText = normalizeSlideDirectives(markdownText.replace(/\r\n/g, '\n'));
 
   // Split into horizontal slide sections using `\n---\n`
   // We match `\n---\n` while ignoring dashes inside code blocks or frontmatter

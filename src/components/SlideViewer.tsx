@@ -9,11 +9,15 @@ import {
   Palette,
   Check,
   RotateCcw,
+  MousePointerClick,
+  Undo2,
+  Redo2,
 } from 'lucide-react';
 import { SlideContent, PresentationSettings } from '../types/presentation';
 import { THEMES, FONT_CLASSES, isColorLight } from '../utils/themes';
 import { setSlideTextColorInMarkdown, wrapTextWithColor } from '../utils/markdownParser';
 import { renderAllMermaidInContainer } from '../utils/mermaidHelper';
+import { VisualSlideOverlay } from './VisualSlideOverlay';
 
 interface SlideViewerProps {
   slides: SlideContent[];
@@ -23,7 +27,11 @@ interface SlideViewerProps {
   onStartFullscreen: () => void;
   onOpenPresenterConsole: () => void;
   markdown?: string;
-  onUpdateMarkdown?: (newMarkdown: string) => void;
+  onUpdateMarkdown?: (newMarkdown: string, immediate?: boolean) => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
 }
 
 export const SlideViewer: React.FC<SlideViewerProps> = ({
@@ -35,6 +43,10 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
   onOpenPresenterConsole,
   markdown = '',
   onUpdateMarkdown,
+  onUndo,
+  onRedo,
+  canUndo = false,
+  canRedo = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -49,13 +61,25 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
   const [laserPos, setLaserPos] = useState({ x: 0, y: 0 });
   const [previewTransitionTrigger, setPreviewTransitionTrigger] = useState(0);
 
-  const prevIndexRef = useRef(currentIndex);
-  const prevTransitionRef = useRef(settings.transition);
-  const slideContentRef = useRef<HTMLDivElement>(null);
-
   const currentSlide = slides[currentIndex] || slides[0];
   const theme = THEMES[settings.theme] || THEMES.obsidian;
   const font = FONT_CLASSES[settings.fontFamily] || FONT_CLASSES.sans;
+
+  const [isVisualEditing, setIsVisualEditing] = useState(false);
+  const lastHtmlRef = useRef(currentSlide?.htmlContent || '');
+
+  useEffect(() => {
+    if (!isVisualEditing && currentSlide) {
+      lastHtmlRef.current = currentSlide.htmlContent;
+      if (slideContentRef.current && slideContentRef.current.innerHTML !== currentSlide.htmlContent) {
+        slideContentRef.current.innerHTML = currentSlide.htmlContent;
+      }
+    }
+  }, [currentSlide, isVisualEditing]);
+
+  const prevIndexRef = useRef(currentIndex);
+  const prevTransitionRef = useRef(settings.transition);
+  const slideContentRef = useRef<HTMLDivElement>(null);
 
   // Track slide direction and fragment step initialization on slide change
   useEffect(() => {
@@ -164,6 +188,16 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
 
   // Keyboard navigation when focusing on slide viewer
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    const target = e.target as HTMLElement;
+    if (
+      target.isContentEditable ||
+      target.closest('.wysiwyg-active-element') ||
+      target.tagName === 'INPUT' ||
+      target.tagName === 'TEXTAREA'
+    ) {
+      return;
+    }
+
     if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
       e.preventDefault();
       handleNext();
@@ -211,14 +245,14 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
   const handleApplySlideColor = (color: string | null) => {
     if (onUpdateMarkdown && markdown) {
       const nextMd = setSlideTextColorInMarkdown(markdown, currentIndex, color);
-      onUpdateMarkdown(nextMd);
+      onUpdateMarkdown(nextMd, true);
     }
   };
 
   const handleApplyTextColorToSelection = (color: string) => {
     if (onUpdateMarkdown && markdown && highlightedText) {
       const nextMd = wrapTextWithColor(markdown, highlightedText, color);
-      onUpdateMarkdown(nextMd);
+      onUpdateMarkdown(nextMd, true);
       setHighlightedText('');
     }
   };
@@ -258,9 +292,39 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
               {currentSlide.customTextColor}
             </span>
           )}
+
+          {/* Visual Click-to-Edit Hint */}
+          <div className="flex items-center gap-1 text-[11px] text-indigo-400 font-medium hidden 2xl:flex px-2 py-0.5 rounded bg-indigo-950/50 border border-indigo-800/40">
+            <MousePointerClick className="w-3 h-3 text-indigo-400" />
+            <span>Click text to format</span>
+          </div>
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
+          {/* Undo & Redo buttons */}
+          {onUndo && (
+            <button
+              onClick={onUndo}
+              disabled={!canUndo}
+              className="flex items-center gap-1 px-2 py-1 rounded text-xs text-slate-400 hover:text-slate-200 hover:bg-slate-800 disabled:opacity-25 disabled:pointer-events-none transition-colors"
+              title="Undo last change (Ctrl+Z)"
+            >
+              <Undo2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Undo</span>
+            </button>
+          )}
+          {onRedo && (
+            <button
+              onClick={onRedo}
+              disabled={!canRedo}
+              className="flex items-center gap-1 px-2 py-1 rounded text-xs text-slate-400 hover:text-slate-200 hover:bg-slate-800 disabled:opacity-25 disabled:pointer-events-none transition-colors"
+              title="Redo (Ctrl+Y)"
+            >
+              <Redo2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Redo</span>
+            </button>
+          )}
+
           {/* Text Color Picker Tool */}
           <div className="relative">
             <button
@@ -471,9 +535,24 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
                 settings.centerSlides ? 'my-auto' : ''
               } ${getTransitionClass()}`}
               style={{ color: effectiveTextColor }}
-              dangerouslySetInnerHTML={{ __html: currentSlide.htmlContent }}
+              dangerouslySetInnerHTML={{ __html: isVisualEditing ? lastHtmlRef.current : currentSlide.htmlContent }}
             />
           </div>
+
+          {/* Visual WYSIWYG Click-to-Edit & Formatting Overlay */}
+          <VisualSlideOverlay
+            slideIndex={currentIndex}
+            markdown={markdown}
+            onUpdateMarkdown={onUpdateMarkdown}
+            slideContainerRef={slideContentRef}
+            isLightBg={isLightBg}
+            scale={scale}
+            onEditingChange={setIsVisualEditing}
+            onUndo={onUndo}
+            onRedo={onRedo}
+            canUndo={canUndo}
+            canRedo={canRedo}
+          />
 
           {/* Progress Bar */}
           {settings.showProgressBar && (

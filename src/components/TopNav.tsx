@@ -11,6 +11,8 @@ import {
   Share2,
   Lightbulb,
   WifiOff,
+  Undo2,
+  Redo2,
 } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
@@ -29,6 +31,10 @@ interface TopNavProps {
   totalSlides: number;
   currentSlideIndex: number;
   lastSavedAt: number | null;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
 }
 
 export const TopNav: React.FC<TopNavProps> = ({
@@ -45,6 +51,10 @@ export const TopNav: React.FC<TopNavProps> = ({
   totalSlides,
   currentSlideIndex,
   lastSavedAt,
+  onUndo,
+  onRedo,
+  canUndo = false,
+  canRedo = false,
 }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleInput, setTitleInput] = useState(title);
@@ -154,6 +164,30 @@ export const TopNav: React.FC<TopNavProps> = ({
           <span className="hidden xl:inline">Preview</span>
         </button>
       </div>
+
+      {/* Global Undo & Redo Controls */}
+      {(onUndo || onRedo) && (
+        <div className="flex items-center gap-0.5 bg-slate-900/90 p-1 rounded-lg border border-slate-800 shrink-0">
+          <button
+            onClick={onUndo}
+            disabled={!canUndo}
+            className="p-1 sm:px-2 sm:py-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-25 disabled:pointer-events-none transition-colors flex items-center gap-1 text-xs"
+            title="Undo (Ctrl+Z)"
+          >
+            <Undo2 className="w-3.5 h-3.5" />
+            <span className="hidden lg:inline text-[11px]">Undo</span>
+          </button>
+          <button
+            onClick={onRedo}
+            disabled={!canRedo}
+            className="p-1 sm:px-2 sm:py-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-25 disabled:pointer-events-none transition-colors flex items-center gap-1 text-xs"
+            title="Redo (Ctrl+Y)"
+          >
+            <Redo2 className="w-3.5 h-3.5" />
+            <span className="hidden lg:inline text-[11px]">Redo</span>
+          </button>
+        </div>
+      )}
 
       {/* Zone 3: Primary Actions */}
       <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">

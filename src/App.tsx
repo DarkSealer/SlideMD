@@ -25,6 +25,7 @@ import { PresentationGuideModal } from './components/PresentationGuideModal';
 import { AudiencePresentationView } from './components/AudiencePresentationView';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { isAudienceWindow, launchAudienceWindow } from './utils/presenterSync';
+import { usePresentationHistory } from './hooks/usePresentationHistory';
 
 export default function App() {
   const [decks, setDecks] = useState<PresentationDeck[]>(() => getSavedDecks());
@@ -160,16 +161,60 @@ export default function App() {
     }, 300);
   };
 
+  const {
+    pushState,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    resetHistory,
+  } = usePresentationHistory({
+    initialSnapshot: {
+      markdown: activeDeck.markdown,
+      settings: activeDeck.settings,
+    },
+    onApplySnapshot: (snap) => {
+      handleUpdateActiveDeck({
+        markdown: snap.markdown,
+        settings: snap.settings,
+      });
+    },
+  });
+
+  // Reset history stack when user switches presentations
+  const lastDeckIdRef = useRef(activeDeck.id);
+  useEffect(() => {
+    if (activeDeck.id !== lastDeckIdRef.current) {
+      lastDeckIdRef.current = activeDeck.id;
+      resetHistory({
+        markdown: activeDeck.markdown,
+        settings: activeDeck.settings,
+      });
+    }
+  }, [activeDeck.id, activeDeck.markdown, activeDeck.settings, resetHistory]);
+
   const handleUpdateTitle = (newTitle: string) => {
     handleUpdateActiveDeck({ title: newTitle });
   };
 
-  const handleUpdateMarkdown = (newMarkdown: string) => {
-    handleUpdateActiveDeck({ markdown: newMarkdown });
+  const handleUpdateMarkdown = (newMarkdown: string, immediate = false) => {
+    pushState(
+      {
+        markdown: newMarkdown,
+        settings: activeDeck.settings,
+      },
+      immediate
+    );
   };
 
   const handleUpdateSettings = (newSettings: PresentationSettings) => {
-    handleUpdateActiveDeck({ settings: newSettings });
+    pushState(
+      {
+        markdown: activeDeck.markdown,
+        settings: newSettings,
+      },
+      true
+    );
   };
 
   const handleSelectDeck = (id: string) => {
@@ -292,6 +337,10 @@ export default function App() {
         totalSlides={slides.length}
         currentSlideIndex={currentSlideIndex}
         lastSavedAt={lastSavedAt}
+        onUndo={undo}
+        onRedo={redo}
+        canUndo={canUndo}
+        canRedo={canRedo}
       />
 
       {/* Floating Notification Toast */}
@@ -373,6 +422,10 @@ export default function App() {
               onOpenPresenterConsole={() => setShowPresenterConsole(true)}
               markdown={activeDeck.markdown}
               onUpdateMarkdown={handleUpdateMarkdown}
+              onUndo={undo}
+              onRedo={redo}
+              canUndo={canUndo}
+              canRedo={canRedo}
             />
           </div>
         )}

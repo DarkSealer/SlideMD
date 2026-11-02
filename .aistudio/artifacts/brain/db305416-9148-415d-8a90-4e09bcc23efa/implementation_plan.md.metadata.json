@@ -1,6 +1,6 @@
 {
-  "summary":  "Implementation plan for client-side Microsoft PowerPoint (.pptx) export with hybrid native text, rendered diagram captures, speaker notes embedding, and aspect ratio matching.",
-  "updatedAt":  "2026-10-30T15:09:35.927813824Z",
+  "summary":  "Implementation plan for the Visual Drag-and-Drop & Click-to-Edit Formatting Toolbar (WYSIWYG Overlay) in SlideMD, enabling non-technical users to edit slide content directly on the preview with instant two-way Markdown synchronization, floating text formatting controls, heading level selectors, color pickers, and visual block reordering.",
+  "updatedAt":  "2026-11-02T13:40:40.786839931Z",
   "requestFeedback":  true,
   "userFacing":  true
 }

@@ -1,4 +1,5 @@
 import { PresentationDeck } from '../types/presentation';
+import { normalizeSlideDirectives } from './markdownParser';
 
 const STORAGE_KEY_DECKS = 'slidecraft_decks_v4';
 const STORAGE_KEY_ACTIVE = 'slidecraft_active_deck_id';
@@ -387,7 +388,21 @@ export function getSavedDecks(): PresentationDeck[] {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        let didRepair = false;
+        const repaired = parsed.map((deck: PresentationDeck) => {
+          if (deck && typeof deck.markdown === 'string') {
+            const fixedMd = normalizeSlideDirectives(deck.markdown);
+            if (fixedMd !== deck.markdown) {
+              didRepair = true;
+              return { ...deck, markdown: fixedMd };
+            }
+          }
+          return deck;
+        });
+        if (didRepair) {
+          localStorage.setItem(STORAGE_KEY_DECKS, JSON.stringify(repaired));
+        }
+        return repaired;
       }
     }
   } catch (e) {
