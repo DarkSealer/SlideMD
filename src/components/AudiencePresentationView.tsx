@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Maximize2, Minimize2, Radio, CheckCircle2 } from 'lucide-react';
 import { SlideContent, PresentationDeck } from '../types/presentation';
 import { parseMarkdownToSlides } from '../utils/markdownParser';
-import { THEMES, FONT_CLASSES, isColorLight } from '../utils/themes';
+import { THEMES, FONT_CLASSES, resolveTheme, resolveFontPairing, isColorLight } from '../utils/themes';
 import { renderAllMermaidInContainer } from '../utils/mermaidHelper';
 import { syncManager, PresenterSyncEvent } from '../utils/presenterSync';
 
@@ -37,9 +37,25 @@ export const AudiencePresentationView: React.FC<AudiencePresentationViewProps> =
     title: 'Loading',
   };
 
-  const theme = THEMES[deck.settings.theme] || THEMES.obsidian;
+  const theme = resolveTheme(deck.settings);
+  const fontPairing = resolveFontPairing(deck.settings.fontPairingId);
   const font = FONT_CLASSES[deck.settings.fontFamily] || FONT_CLASSES.sans;
-  const isLightBg = isColorLight(currentSlide.backgroundColor) || theme.category === 'light';
+  const isLightBg = isColorLight(currentSlide.backgroundColor) || isColorLight(theme.customColors?.background || theme.previewBg) || theme.category === 'light';
+  const isCustomTheme = Boolean(theme.isCustom || theme.customColors);
+
+  const customStyles: React.CSSProperties = {
+    '--slide-bg': theme.customColors?.background || theme.previewBg,
+    '--slide-surface': theme.customColors?.surface || (isLightBg ? '#f1f5f9' : '#1e293b'),
+    '--slide-heading': theme.customColors?.heading || theme.headingColor,
+    '--slide-text': theme.customColors?.text || (isLightBg ? '#0f172a' : '#f1f5f9'),
+    '--slide-accent': theme.customColors?.accent || theme.accentColor,
+    '--slide-secondary': theme.customColors?.secondary || theme.secondaryColor,
+    '--slide-border': theme.customColors?.border || (isLightBg ? '#cbd5e1' : '#334155'),
+    '--slide-code-bg': theme.customColors?.codeBg || (isLightBg ? '#0f172a' : '#08080f'),
+    '--slide-heading-font': fontPairing.headingFont,
+    '--slide-body-font': fontPairing.bodyFont,
+    '--slide-mono-font': fontPairing.monoFont,
+  } as React.CSSProperties;
 
   // Request state from presenter console & subscribe to sync events
   useEffect(() => {
@@ -189,10 +205,11 @@ export const AudiencePresentationView: React.FC<AudiencePresentationViewProps> =
           transformOrigin: 'center center',
           backgroundColor: currentSlide.backgroundColor || undefined,
           perspective: '1200px',
+          ...customStyles,
         }}
         className={`relative shadow-2xl rounded-xl overflow-hidden border shrink-0 ${
-          isLightBg ? 'border-slate-300' : theme.borderClass
-        } ${font.fontClass} ${currentSlide.backgroundColor ? '' : theme.bgClass} ${
+          isCustomTheme ? 'slide-custom-theme' : (isLightBg ? 'border-slate-300' : theme.borderClass)
+        } ${isCustomTheme ? '' : font.fontClass} ${currentSlide.backgroundColor ? '' : (isCustomTheme ? '' : theme.bgClass)} ${
           isLightBg ? 'theme-light' : 'theme-dark dark'
         } flex flex-col transition-all duration-300`}
       >
@@ -203,7 +220,7 @@ export const AudiencePresentationView: React.FC<AudiencePresentationViewProps> =
             className={`slide-content-wrapper prose max-w-none w-full ${
               deck.settings.centerSlides ? 'my-auto' : ''
             } ${getTransitionClass()}`}
-            style={{ color: currentSlide.customTextColor || (isLightBg ? '#0f172a' : '#f1f5f9') }}
+            style={{ color: currentSlide.customTextColor || (theme.customColors ? theme.customColors.text : (isLightBg ? '#0f172a' : '#f1f5f9')) }}
             dangerouslySetInnerHTML={{ __html: currentSlide.htmlContent }}
           />
         </div>
@@ -215,7 +232,7 @@ export const AudiencePresentationView: React.FC<AudiencePresentationViewProps> =
               className="h-full transition-all duration-300"
               style={{
                 width: `${((currentIndex + 1) / Math.max(1, slides.length)) * 100}%`,
-                backgroundColor: theme.accentColor,
+                backgroundColor: theme.customColors?.accent || theme.accentColor,
               }}
             />
           </div>

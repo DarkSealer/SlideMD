@@ -483,6 +483,7 @@ export default function App() {
           settings={activeDeck.settings}
           onChangeSettings={handleUpdateSettings}
           onClose={() => setShowThemesModal(false)}
+          currentSlideContent={slides[currentSlideIndex]}
         />
       )}
 

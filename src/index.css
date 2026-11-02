@@ -1153,5 +1153,58 @@ pre code.hljs {
   color: #3730a3;
 }
 
+/* Custom Theme Variable Injection on Slide Container */
+.slide-custom-theme {
+  background-color: var(--slide-bg) !important;
+  color: var(--slide-text) !important;
+  border-color: var(--slide-border) !important;
+}
+
+.slide-custom-theme h1,
+.slide-custom-theme h2,
+.slide-custom-theme h3,
+.slide-custom-theme h4,
+.slide-custom-theme h5,
+.slide-custom-theme h6 {
+  color: var(--slide-heading) !important;
+  font-family: var(--slide-heading-font, inherit);
+}
+
+.slide-custom-theme .slide-content-wrapper {
+  color: var(--slide-text) !important;
+  font-family: var(--slide-body-font, inherit);
+}
+
+.slide-custom-theme p,
+.slide-custom-theme li,
+.slide-custom-theme span {
+  font-family: var(--slide-body-font, inherit);
+}
+
+.slide-custom-theme pre,
+.slide-custom-theme code {
+  background-color: var(--slide-code-bg, #0d1117) !important;
+  font-family: var(--slide-mono-font, ui-monospace, SFMono-Regular, Menlo, monospace) !important;
+}
+
+.slide-custom-theme a {
+  color: var(--slide-accent) !important;
+}
+
+.slide-custom-theme th {
+  color: var(--slide-accent) !important;
+  border-bottom: 2px solid var(--slide-accent) !important;
+}
+
+.slide-custom-theme blockquote {
+  border-left-color: var(--slide-accent) !important;
+}
+
+.slide-custom-theme .slide-card {
+  background-color: var(--slide-surface) !important;
+  border-color: var(--slide-border) !important;
+}
+
+
 
 

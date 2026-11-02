@@ -1,7 +1,7 @@
 import LZString from 'lz-string';
 import { PresentationDeck } from '../types/presentation';
 import { parseMarkdownToSlides } from './markdownParser';
-import { THEMES } from './themes';
+import { THEMES, resolveTheme, resolveFontPairing } from './themes';
 
 /**
  * Generates an interactive, completely standalone HTML file containing the entire presentation,
@@ -10,7 +10,8 @@ import { THEMES } from './themes';
  */
 export function generateStandaloneHtml(deck: PresentationDeck): string {
   const slides = parseMarkdownToSlides(deck.markdown);
-  const theme = THEMES[deck.settings.theme] || THEMES.obsidian;
+  const theme = resolveTheme(deck.settings);
+  const fontPairing = resolveFontPairing(deck.settings.fontPairingId);
 
   const slidesJson = JSON.stringify(
     slides.map((s) => ({
@@ -26,15 +27,36 @@ export function generateStandaloneHtml(deck: PresentationDeck): string {
     }))
   );
 
+  const slideBg = theme.customColors?.background || theme.previewBg;
+  const slideHeading = theme.customColors?.heading || theme.headingColor;
+  const slideText = theme.customColors?.text || (theme.category === 'light' ? '#1e293b' : '#f1f5f9');
+  const slideAccent = theme.customColors?.accent || theme.accentColor;
+  const slideBorder = theme.customColors?.border || (theme.category === 'light' ? '#e2e8f0' : '#334155');
+  const slideCodeBg = theme.customColors?.codeBg || '#0d1117';
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(deck.title)} - SlideMD Presentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;600;700&family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;600;700&family=Space+Grotesk:wght@600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body, html { width: 100%; height: 100%; overflow: hidden; font-family: 'Outfit', system-ui, -apple-system, sans-serif; background: #000; color: #fff; }
+    :root {
+      --slide-bg: ${slideBg};
+      --slide-heading: ${slideHeading};
+      --slide-text: ${slideText};
+      --slide-accent: ${slideAccent};
+      --slide-border: ${slideBorder};
+      --slide-code-bg: ${slideCodeBg};
+      --slide-heading-font: ${fontPairing.headingFont};
+      --slide-body-font: ${fontPairing.bodyFont};
+      --slide-mono-font: ${fontPairing.monoFont};
+    }
+    body, html { width: 100%; height: 100%; overflow: hidden; font-family: var(--slide-body-font); background: #000; color: #fff; }
     
     #presentation-viewport {
       position: relative;
@@ -44,7 +66,7 @@ export function generateStandaloneHtml(deck: PresentationDeck): string {
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      background: ${theme.previewBg};
+      background: ${slideBg};
     }
 
     .slide-stage {
@@ -60,10 +82,13 @@ export function generateStandaloneHtml(deck: PresentationDeck): string {
       padding: clamp(2rem, 5vw, 5rem);
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
       transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
-      color: ${theme.category === 'light' ? '#1e293b' : '#f1f5f9'};
+      background: var(--slide-bg);
+      color: var(--slide-text);
+      font-family: var(--slide-body-font);
+      border: 1px solid var(--slide-border);
     }
 
-    h1, h2, h3, h4 { color: ${theme.headingColor}; font-weight: 700; line-height: 1.2; margin-bottom: 0.8rem; }
+    h1, h2, h3, h4 { color: var(--slide-heading); font-family: var(--slide-heading-font); font-weight: 700; line-height: 1.2; margin-bottom: 0.8rem; }
     h1 { font-size: clamp(2.2rem, 4.5vw, 3.8rem); }
     h2 { font-size: clamp(1.8rem, 3.5vw, 2.8rem); }
     h3 { font-size: clamp(1.3rem, 2.5vw, 2rem); }
@@ -563,7 +588,7 @@ export function generateStandaloneHtml(deck: PresentationDeck): string {
  */
 export function generatePrintPdfHtml(deck: PresentationDeck): string {
   const slides = parseMarkdownToSlides(deck.markdown);
-  const theme = THEMES[deck.settings.theme] || THEMES.obsidian;
+  const theme = resolveTheme(deck.settings);
 
   const slidesHtml = slides
     .map(

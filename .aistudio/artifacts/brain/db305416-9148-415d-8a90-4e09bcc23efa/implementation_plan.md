@@ -1,158 +1,206 @@
-# Visual Drag-and-Drop & Click-to-Edit Formatting Toolbar (WYSIWYG Overlay)
+# Visual Theme Customizer with Real-time Palette & Font Pairing Creator
 
-Empower non-technical creators to format text, modify headings, change colors, and reorder slide sections directly on the visual slide preview with real-time two-way Markdown synchronization.
+A comprehensive visual studio for crafting bespoke presentation themes with live slide canvas preview, intelligent color harmonies, curated editorial and modern font pairings, custom hex pickers, and automated persistence into both local storage and export bundles.
 
----
-
-## User Review & Critical Decisions
+### User Review & Critical Decisions
 
 > [!IMPORTANT]
-> The following architectural decisions were confirmed during interactive clarification:
-> - **Activation Method**: Direct click on any slide element or text selection in the slide preview immediately activates the contextual floating formatting toolbar and enables inline editing.
-> - **Two-Way Synchronization**: Real-time bi-directional synchronization that instantly reflects visual edits back into the underlying Markdown editor (with smart line-offset tracking to avoid cursor displacement).
-> - **Initial Feature Scope**: Rich text formatting (Bold, Italic, Strikethrough, Inline Code, Text Color), Heading level switching (H1, H2, H3, Paragraph), Text alignment, Block insertion, and Visual block drag handles (reordering slide paragraphs, lists, and callouts).
+> The following core user preferences have been confirmed and incorporated as architectural requirements:
+
+- **Confirmed Decision 1 (Surface Placement)**: The Visual Theme Customizer will launch as a dedicated full-featured modal dialog triggered from the Top Navigation "Theme" button, replacing the simple static selector with an expansive two-column studio (Controls on the left, Real-time interactive slide preview on the right).
+- **Confirmed Decision 2 (Customizer Capabilities)**: Includes curated harmonious color palettes (High-contrast Dark, Warm Editorial, Technical Cyan, Botanical Emerald, Sunset Wine, and Nordic Frost), custom hex pickers with contrast ratio indicators, and curated font pairings (Hero display font + Body font + Monospace code) with immediate live slide preview.
+- **Confirmed Decision 3 (Persistence & Portability)**: Custom themes are stored in `localStorage` (`slidecraft_custom_themes_v1`), assigned unique IDs, accessible across all presentations on the device, and bundled directly into the standalone HTML and JSON deck exports so presentation decks look identical on any recipient machine.
 
 ---
 
-## 1. Overview & Core Concept
+### 1. Overview & Core Concept
 
-### What It Does
-While SlideMD is built on the speed and portability of Markdown, non-technical users often hesitate when they need to remember syntax rules for headings (`#`), bold text (`**`), colored spans (`<span style="color:...">`), or nested lists.
-
-The **WYSIWYG Slide Overlay** bridges this gap: users can simply click any text directly inside the slide preview to edit it inline, select text to reveal a floating formatting toolbar, pick colors from a visual palette, switch heading hierarchies, and grab drag handles to reorder slide blocks. Every change automatically compiles to clean, canonical Markdown in real time.
-
-### Target Audience & Persona
-- **Non-Technical Presenters & Educators**: Who want Google Slides / Keynote-style visual editing convenience without giving up the lightweight elegance of Markdown.
-- **Fast Iterators**: Presenters who notice a typo or want to restyle a heading during rehearsal and prefer clicking the slide directly over searching through lines of code.
-
-### Key Value
-- Zero Markdown learning curve for new or non-technical team members.
-- Visual immediacy: see typography, spacing, and colors update in real time on the actual slide canvas.
-- Complete bi-directional fidelity: power users can still edit raw Markdown at any moment, and visual edits produce clean, human-readable Markdown without proprietary lock-in.
+- **What It Does**: Transforms the existing theme picker into an interactive design studio. Users can either pick from existing battle-tested themes, modify individual color tokens (Background, Canvas Surface, Primary Accent, Secondary Highlight, Text Heading, Text Body, and Code Block), choose curated display + body font pairings, or generate harmonious palettes with 1-click presets. Every change updates a live mini slide preview in real time before applying.
+- **Target Audience / Persona**: Engineers, product leaders, designers, educators, and technical speakers who need their presentation decks to match company brand colors, event visual identities, or distinct aesthetic vibes without touching CSS or configuration files.
+- **Key Value**: Eliminates the frustration of guessing hex codes and CSS classes in markdown. Presenters see instant, tangible visual feedback for their slides, verify accessibility contrast on the fly, and save reusable custom themes that travel with their deck.
 
 ---
 
-## 2. User Experience & Visual Design
+### 2. User Experience & Visual Design
 
-### Key User Flows
+#### Key User Flows
+1. **Launching the Studio**: User clicks the "Theme" button in the Top Navigation bar. A modal dialog opens with a tabbed or split-view layout:
+   - **Left Panel (Customizer Controls)**: 
+     - *Theme Selector & Preset Drawer*: Switch between built-in themes or saved custom themes.
+     - *Color Palette Studio*: Primary background, card surface, primary accent, secondary accent, heading text, and body text. Features curated harmonic swatches, quick brightness/contrast check, and native color pickers with hex text input.
+     - *Font Pairing Studio*: Curated font pairings (e.g. *Modern Geometric*: Outfit + Plus Jakarta Sans; *Editorial Luxury*: Playfair Display + Source Serif 4; *Clean Tech*: DM Sans + Inter; *Developer Mono*: JetBrains Mono + Outfit).
+     - *Slide Transitions & Frame Options*: Transition animations (Slide, Fade, Convex, Zoom), Aspect Ratio (16:9 vs 4:3), and layout toggles.
+   - **Right Panel (Real-Time Interactive Canvas Preview)**:
+     - Displays a scaled, live rendering of the user's *current active slide* (or a sample slide with headings, bullet lists, code blocks, and callouts).
+     - Instant CSS variable / class reflection: when the user changes a color or font, the preview updates synchronously with zero lag.
+2. **Saving Custom Themes**:
+   - User clicks "Save as Custom Theme", enters a friendly name (e.g., "Acme Brand Dark"), and the theme is saved to local storage with a generated palette swatch badge.
+   - The active presentation deck's settings are updated to reference this custom theme.
+3. **Applying & Closing**:
+   - User clicks "Apply to Deck" or "Done". The modal closes, and the main slide stage immediately reflects the new theme and font styling across all slides.
 
-1. **Inline Text Editing**:
-   - The user clicks on any heading, paragraph, bullet point, or quote on the slide preview.
-   - The element enters inline edit mode with a subtle brand outline, autofocusing the caret at the clicked position.
-   - Typing directly updates the slide text and automatically pushes the edit to the active slide's section in the Markdown editor.
+#### Visual Identity & Theme
+- **Aesthetic Direction**: Refined, dark-slate SaaS design studio interface with disciplined micro-interactions.
+- **Color Palette & Contrast**: Deep slate canvas (`#0b0f19`), structural panels (`#111827`), hairline borders (`#1f2937`), and electric indigo/cyan action accents (`#6366f1` / `#06b6d4`).
+- **Typography & Hierarchy**: 
+  - Section headers: SemiBold title-case (13px, tracking-wide, unboxed).
+  - Swatch labels: Clean 11px font with monospace hex labels (`font-mono text-[11px]`).
+  - No decorative status dots, no fake telemetry, and no pill badge clutter.
+- **Component Styling & Layout**:
+  - Two-column responsive modal: 55% controls panel with organized collapsible accordion sections, 45% sticky live preview box with theme category badge.
+  - Buttons follow the 2:1 horizontal-to-vertical padding discipline (`px-3 py-1.5` or `px-4 py-2`).
 
-2. **Floating Formatting Toolbar (Selection Overlay)**:
-   - When text is highlighted or focused, a compact, floating toolbar appears above the element:
-     - **Block Type Selector**: Switch between `H1`, `H2`, `H3`, `Paragraph`, and `Bullet List`.
-     - **Style Toggles**: Bold (`B`), Italic (*I*), Strikethrough (~~S~~), and Inline Code (`<>`).
-     - **Color Picker Dropdown**: Swatches with theme-matching accent colors and custom hex input.
-     - **Alignment Buttons**: Left, Center, and Right alignment.
-     - **Block Actions**: Move Up, Move Down, or Delete Block.
-
-3. **Block Reordering (Drag Handles)**:
-   - When hovering over block elements (headings, list items, callouts, diagrams) in preview mode, a discreet `GripVertical` handle appears on the left margin.
-   - Users can drag the block up or down (or click the Up/Down chevron buttons) to reorder sections. The Markdown parser swaps the corresponding lines seamlessly.
-
-4. **Block Insertion Bar**:
-   - A quiet `+` button appears between blocks on hover, allowing users to insert a new heading, paragraph, bullet list, or image with one click.
-
-### Visual Styling & Component Anatomy
-
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│ Floating WYSIWYG Toolbar (Dark Glass / Backdrop Blur)                  │
-│ ┌─────────┬───┬───┬───┬────┬───────┬─────┬───────┬────┬───────────┐   │
-│ │ Heading ▼│ B │ I │ S │ <> │ Color▼│ ≡ ⸬ │ Up/Dn │ 🗑 │ Close [x]│   │
-│ └─────────┴───┴───┴───┴────┴───────┴─────┴───────┴────┴───────────┘   │
-└────────────────────────────────────────────────────────────────────────┘
-          ▼ (Pointer carrot pointing to active slide element)
-┌────────────────────────────────────────────────────────────────────────┐
-│  # Product Roadmap 2026 [Active Editing Element with Focus Ring]       │
-│                                                                        │
-│  [:: Grip]  • Milestone 1: Visual WYSIWYG editing engine               │
-│  [:: Grip]  • Milestone 2: Proportional slide scaling                  │
-└────────────────────────────────────────────────────────────────────────┘
-```
-
-- **Aesthetic Direction**: Floating dark-glass toolbar (`bg-slate-900/95 backdrop-blur-md border border-slate-700/80 shadow-2xl rounded-xl`) with crisp typography and subtle micro-transitions.
-- **Button Grouping**: Clean segmented button clusters with `gap-1`, single-line text, and icons (`lucide-react`).
-- **No Pill Badges**: Clean unboxed controls adhering to the Universal Frontend Design Constitution.
-- **Mobile & Split-Screen Grace**: Clamped position calculations that prevent the floating toolbar from clipping outside the slide viewport or overlapping the top navigation bar.
+#### Interactive Feedback & Motion
+- Real-time swatch hover effects with subtle border scaling (`scale-105 transition-transform`).
+- Live slide preview reflects transitions and color changes within $\le 50\text{ms}$ using CSS custom properties (`--slide-bg`, `--slide-heading`, `--slide-accent`, `--slide-text`, `--slide-border`).
 
 ---
 
-## 3. Key Product Decisions & Trade-Offs
+### 3. Key Product Decisions & Trade-Offs
 
-### Decision 1: Hybrid ContentEditable with Markdown AST Source Mapping
-- **Chosen Approach**: Parse the active slide's raw Markdown into an indexed AST of blocks (Headings, Paragraphs, Lists, Code, Blockquotes). Each rendered HTML element carries a `data-block-id` and line-range metadata. When an inline edit occurs, only that specific block's source lines are updated and re-serialized into the full Markdown document.
-- **Why**: Pure `contenteditable` on the entire slide often generates messy HTML tag soup (`<div><br><span>`) that corrupts Markdown. By isolating edits to individual AST blocks and applying clean markdown serialization per block, we guarantee pristine, standard Markdown output at all times.
-- **Alternatives Considered**: Full external rich-text editor (e.g. TipTap or ProseMirror) was rejected because it introduces heavyweight bundle dependencies and frequently rewrites custom Markdown directives (like `<!-- color: ... -->` and `Note:` speaker notes).
+- **Decision 1: Custom Theme Data Model & Resolution**
+  - *Chosen Approach*: Expand `ThemeDefinition` to support custom hex properties directly (`bgClass`, `customBgColor`, `headingColor`, `accentColor`, `secondaryColor`, `textClass`, `borderClass`, `cardBgClass`, `isCustom?: boolean`).
+  - *Why*: Built-in themes rely on Tailwind utility classes, while user-generated themes need arbitrary user-picked hex values. Supporting inline CSS custom properties on the slide container (`--slide-bg`, etc.) bridges arbitrary hex colors seamlessly with Tailwind's utility system without generating runtime stylesheet bloat.
+  - *Alternatives Considered*: Writing dynamic CSS rules into `<style>` tags at runtime; rejected as harder to sanitize, serialize, and bundle into export files.
 
-### Decision 2: Real-Time Debounced Markdown Synchronization
-- **Chosen Approach**: Input events in the visual editor immediately update the slide DOM locally for instant 60fps typing feedback, while queuing a debounced (150ms) update to the parent Markdown document state.
-- **Why**: Keeps typing lag-free while preventing the Monaco / CodeMirror editor from resetting its selection or lagging on large presentations.
+- **Decision 2: Live Preview Strategy in Modal**
+  - *Chosen Approach*: Render an actual mini `SlideViewer` stage inside the modal using the user's current presentation slide (falling back to a rich demo slide if current slide is empty).
+  - *Why*: Users want to see how *their exact slide content* looks with the new colors and fonts (including tables, code blocks, and diagrams), rather than an abstract generic card.
 
-### Decision 3: Non-Destructive Block Reordering
-- **Chosen Approach**: Slide blocks are demarcated by line numbers in the slide's section. Dragging or clicking Move Up/Down swaps the exact slice of Markdown lines and immediately triggers the slide preview re-render.
-- **Why**: Completely reliable, preserves frontmatter and slide delimiters (`---`), and works offline without external libraries.
+- **Decision 3: Export Bundling & Portable Storage**
+  - *Chosen Approach*: Store user custom themes in `localStorage` (`slidecraft_custom_themes_v1`), and embed the custom theme definition directly inside the `PresentationDeck` object (`deck.customTheme?: ThemeDefinition`).
+  - *Why*: When exporting to standalone single-file HTML, PDF, or sharing via JSON, the custom theme definitions are fully serialized into the file. The recipient gets identical styling even if they open the presentation on an offline machine without having the theme saved in their local storage.
 
 ---
 
-## 4. Technical Architecture & Component Hierarchy
-
-### System Architecture Diagram
+### 4. Technical Architecture & Data Strategy
 
 ```
-┌───────────────────────────────────────────────────────────────────────┐
-│ SlideCraft Application State (src/App.tsx)                             │
-│ ┌─────────────────────────┐           ┌─────────────────────────────┐ │
-│ │ markdown: string        │ ◄───────┐ │ settings: PresSettings      │ │
-│ └───────────┬─────────────┘         │ └──────────────┬──────────────┘ │
-└─────────────┼───────────────────────┼────────────────┼────────────────┘
-              ▼                       │                ▼
-┌──────────────────────────┐          │ ┌─────────────────────────────┐
-│ MarkdownEditor.tsx       │          │ │ SlideViewer.tsx             │
-│ (Raw CodeMirror/Monaco)  │          │ │ (Slide Preview Viewport)    │
-└──────────────────────────┘          │ └──────────────┬──────────────┘
-                                      │                ▼
-                             ┌────────┴───────────────────────────────┐
-                             │ VisualSlideOverlay.tsx                 │
-                             │ (Click-to-Edit & Drag Controller)      │
-                             │                                        │
-                             │ ┌────────────────────────────────────┐ │
-                             │ │ FloatingFormatToolbar.tsx          │ │
-                             │ │ - Heading Switcher (H1..H3, P)     │ │
-                             │ │ - Inline Style Toggles (B, I, S, `)│ │
-                             │ │ - Text Color Palette Dropdown      │ │
-                             │ │ - Alignment Controls (L, C, R)     │ │
-                             │ └────────────────────────────────────┘ │
-                             │ ┌────────────────────────────────────┐ │
-                             │ │ BlockDragHandle & Order Controls   │ │
-                             │ │ - Move Block Up / Down             │ │
-                             │ │ - Quick Insert Block Toolbar       │ │
-                             │ └────────────────────────────────────┘ │
-                             └────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            SlideMD Presentation Workspace                    │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                    [Click "Theme" Button in TopNav]
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│               ThemeSettingsPanel (Visual Theme Customizer Modal)            │
+├──────────────────────────────────────┬──────────────────────────────────────┤
+│           Left Panel: Controls       │       Right Panel: Live Preview      │
+│ ┌──────────────────────────────────┐ │ ┌──────────────────────────────────┐ │
+│ │ 1. Built-in & Custom Theme Grid  │ │ │ Mini Slide Stage (16:9 / 4:3)    │ │
+│ │   [Obsidian] [Nord] [Custom +]   │ │ │                                  │ │
+│ ├──────────────────────────────────┤ │ │  # Slide Title (Font Heading)    │ │
+│ │ 2. Color Palette Creator         │ │ │  Body text (Font Body)           │ │
+│ │   - Canvas Background (Hex/Picker│ │ │  ┌────────────────────────────┐  │ │
+│ │   - Heading Text Color           │ │ │  │ Accent Card / Table / Code │  │ │
+│ │   - Body Text Color              │ │ │  └────────────────────────────┘  │ │
+│ │   - Primary Accent Color         │ │ │                                  │ │
+│ │   - Card Surface Color           │ │ └──────────────────────────────────┘ │
+│ ├──────────────────────────────────┤ │                                      │
+│ │ 3. Font Pairing Selector         │ │ [Theme Contrast Score: 8.4:1 AA ✓]   │
+│ │   [Modern Sans] [Editorial] ... │ │                                      │
+│ ├──────────────────────────────────┤ │                                      │
+│ │ 4. Slide Transition & Layout     │ │                                      │
+│ └──────────────────────────────────┘ │                                      │
+├──────────────────────────────────────┴──────────────────────────────────────┤
+│ Actions: [Save as New Custom Theme] [Reset Defaults]   [Cancel] [Apply & Done]│
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                        ┌──────────────┴──────────────┐
+                        ▼                             ▼
+         ┌────────────────────────────┐ ┌───────────────────────────┐
+         │ LocalStorage Custom Themes │ │ Active Deck Settings Sync │
+         │ 'slidecraft_custom_themes' │ │ settings.theme = customId │
+         └────────────────────────────┘ └─────────────┬─────────────┘
+                                                      ▼
+                                        ┌───────────────────────────┐
+                                        │ Export Engine (HTML/JSON) │
+                                        │ Embeds theme CSS vars     │
+                                        └───────────────────────────┘
 ```
 
-### Component & File Mapping
+#### Data Model Extensions
 
-1. **`src/components/VisualSlideOverlay.tsx`**:
-   - Wraps the slide preview content.
-   - Detects clicks and text selections within the slide container.
-   - Calculates absolute/fixed coordinates for the floating toolbar relative to the selected DOM element.
-   - Handles `contentEditable` focus, blur, and input events.
+```typescript
+// src/types/presentation.ts
+export type ThemeId =
+  | 'obsidian'
+  | 'clean-white'
+  | 'nord'
+  | 'dracula'
+  | 'solarized'
+  | 'navy'
+  | 'emerald'
+  | 'sunset'
+  | string; // Allows dynamic custom theme IDs, e.g. "custom-1730541200"
 
-2. **`src/components/FloatingFormatToolbar.tsx`**:
-   - The floating popover bar housing format buttons, heading dropdown, color palette, and block reordering tools.
-   - Executes standard document commands (`execCommand` / selection range wrapping) and maps them to Markdown tokens (`**`, `*`, `~~`, `<code>`, `<span style="color:...">`).
+export interface CustomThemeColors {
+  background: string;
+  surface: string;
+  heading: string;
+  text: string;
+  accent: string;
+  secondary: string;
+  border: string;
+  codeBg: string;
+}
 
-3. **`src/utils/slideBlockParser.ts`**:
-   - Splits a single slide's Markdown into discrete editable blocks (e.g., `# Title`, `Paragraph`, `- List item`).
-   - Provides utilities:
-     - `updateBlockInMarkdown(markdown, slideIndex, blockIndex, newContent)`
-     - `reorderBlocksInMarkdown(markdown, slideIndex, fromIndex, toIndex)`
-     - `insertBlockInMarkdown(markdown, slideIndex, targetIndex, blockType)`
+export interface FontPairing {
+  id: string;
+  name: string;
+  headingFont: string;
+  bodyFont: string;
+  monoFont: string;
+  category: 'sans' | 'serif' | 'display' | 'mono';
+  googleFontImport?: string;
+}
 
-4. **Integration with `SlideViewer.tsx`**:
-   - Seamlessly enabled when viewing the slide in Split or Preview mode.
-   - Automatically disabled in Fullscreen Presentation and Presenter Console modes so presenting remains undisturbed.
+export interface ThemeDefinition {
+  id: ThemeId;
+  name: string;
+  category: 'dark' | 'light';
+  description: string;
+  previewBg: string;
+  previewAccent: string;
+  bgClass: string;
+  textClass: string;
+  headingColor: string;
+  accentColor: string;
+  secondaryColor: string;
+  borderClass: string;
+  cardBgClass: string;
+  codeThemeClass: string;
+  customColors?: CustomThemeColors;
+  fontPairingId?: string;
+  isCustom?: boolean;
+}
+```
+
+#### Step-by-Step Implementation Sequence
+
+1. **Theme Utility & Font Pairing Engine (`src/utils/themes.ts`)**:
+   - Add `CUSTOM_FONT_PAIRINGS` with distinctive pairings (Modern Sans, Editorial Serif, Condensed Dynamic, Monospace Minimal, Neo-Grotesque).
+   - Implement `getAllThemes(): Record<string, ThemeDefinition>` that loads built-in themes merged with user custom themes from `localStorage`.
+   - Add helper functions: `saveCustomTheme(theme: ThemeDefinition)`, `deleteCustomTheme(themeId: string)`, `createCustomThemeFromColors(name, colors, fontPairing)`.
+   - Compute real-time WCAG luminance contrast ratios (`getContrastRatio(fgHex, bgHex)`) to warn the user if a text color lacks legibility against their background.
+
+2. **Visual Theme Customizer Modal (`src/components/ThemeSettingsPanel.tsx`)**:
+   - Upgrade the modal into a two-column responsive layout with:
+     - Preset theme cards with one-click selection.
+     - Live Palette Customizer with hex inputs, interactive color pickers, and curated harmonious palette shortcuts.
+     - Font pairing picker showing live heading and body sample previews.
+     - Interactive mini slide preview showing the current slide or demo slide with immediate CSS variable bindings.
+     - "Save as Custom Theme" dialog with custom name input and delete affordance for previously saved custom themes.
+
+3. **Slide Viewer & Canvas Integration (`src/components/SlideViewer.tsx` & `FullscreenPresentation.tsx`)**:
+   - Update slide container styles to bind `customColors` to CSS variables (`--slide-bg`, `--slide-heading`, `--slide-accent`, `--slide-surface`) so custom hex palettes render seamlessly without needing pre-compiled Tailwind classes.
+   - Apply the selected font family to headings and body elements dynamically.
+
+4. **Standalone HTML & Deck Export Engine (`src/utils/exportEngine.ts` & `src/utils/storage.ts`)**:
+   - Update `generateStandaloneHtml` to inject custom theme CSS variables into the exported HTML document so exported presentations look identical offline.
+   - Ensure `PresentationDeck` embeds custom theme definitions when shared or exported to JSON.
+
+5. **Verification**:
+   - Run `lint_applet` and `compile_applet` to verify zero TypeScript errors and a clean build.
+   - Verify creating a custom theme, tuning hex values, testing contrast check, live previewing, and verifying that undo/redo and slide formatting continue to function seamlessly.

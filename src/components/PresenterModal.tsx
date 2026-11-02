@@ -17,7 +17,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { SlideContent, PresentationSettings, PresentationDeck } from '../types/presentation';
-import { THEMES, isColorLight } from '../utils/themes';
+import { THEMES, resolveTheme, isColorLight } from '../utils/themes';
 import { renderAllMermaidInContainer } from '../utils/mermaidHelper';
 import { syncManager, launchAudienceWindow, PresenterSyncEvent } from '../utils/presenterSync';
 
@@ -50,7 +50,7 @@ export const PresenterModal: React.FC<PresenterModalProps> = ({
 
   const currentSlide = slides[currentIndex] || slides[0];
   const nextSlide = slides[currentIndex + 1] || null;
-  const theme = THEMES[settings.theme] || THEMES.obsidian;
+  const theme = resolveTheme(settings);
   const currentSlideContentRef = useRef<HTMLDivElement>(null);
   const previewBoxRef = useRef<HTMLDivElement>(null);
   const isCurrentLight = isColorLight(currentSlide.backgroundColor) || theme.category === 'light';

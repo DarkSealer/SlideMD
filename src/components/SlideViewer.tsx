@@ -14,7 +14,7 @@ import {
   Redo2,
 } from 'lucide-react';
 import { SlideContent, PresentationSettings } from '../types/presentation';
-import { THEMES, FONT_CLASSES, isColorLight } from '../utils/themes';
+import { THEMES, FONT_CLASSES, resolveTheme, resolveFontPairing, isColorLight } from '../utils/themes';
 import { setSlideTextColorInMarkdown, wrapTextWithColor } from '../utils/markdownParser';
 import { renderAllMermaidInContainer } from '../utils/mermaidHelper';
 import { VisualSlideOverlay } from './VisualSlideOverlay';
@@ -62,7 +62,8 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
   const [previewTransitionTrigger, setPreviewTransitionTrigger] = useState(0);
 
   const currentSlide = slides[currentIndex] || slides[0];
-  const theme = THEMES[settings.theme] || THEMES.obsidian;
+  const theme = resolveTheme(settings);
+  const fontPairing = resolveFontPairing(settings.fontPairingId);
   const font = FONT_CLASSES[settings.fontFamily] || FONT_CLASSES.sans;
 
   const [isVisualEditing, setIsVisualEditing] = useState(false);
@@ -233,8 +234,23 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
 
   // Custom slide background override if provided in slide markdown directives
   const slideBackground = currentSlide.backgroundColor || undefined;
-  const isLightBg = isColorLight(slideBackground) || theme.category === 'light';
-  const effectiveTextColor = currentSlide.customTextColor || (isLightBg ? '#0f172a' : '#f1f5f9');
+  const isLightBg = isColorLight(slideBackground) || isColorLight(theme.customColors?.background || theme.previewBg) || theme.category === 'light';
+  const effectiveTextColor = currentSlide.customTextColor || (theme.customColors ? theme.customColors.text : (isLightBg ? '#0f172a' : '#f1f5f9'));
+  const isCustomTheme = Boolean(theme.isCustom || theme.customColors);
+
+  const customStyles: React.CSSProperties = {
+    '--slide-bg': theme.customColors?.background || theme.previewBg,
+    '--slide-surface': theme.customColors?.surface || (isLightBg ? '#f1f5f9' : '#1e293b'),
+    '--slide-heading': theme.customColors?.heading || theme.headingColor,
+    '--slide-text': theme.customColors?.text || (isLightBg ? '#0f172a' : '#f1f5f9'),
+    '--slide-accent': theme.customColors?.accent || theme.accentColor,
+    '--slide-secondary': theme.customColors?.secondary || theme.secondaryColor,
+    '--slide-border': theme.customColors?.border || (isLightBg ? '#cbd5e1' : '#334155'),
+    '--slide-code-bg': theme.customColors?.codeBg || (isLightBg ? '#0f172a' : '#08080f'),
+    '--slide-heading-font': fontPairing.headingFont,
+    '--slide-body-font': fontPairing.bodyFont,
+    '--slide-mono-font': fontPairing.monoFont,
+  } as React.CSSProperties;
 
   // Render Mermaid diagrams whenever slide content or theme mode changes
   useEffect(() => {
@@ -508,11 +524,12 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
             height: `${baseHeight}px`,
             transform: `scale(${scale})`,
             transformOrigin: 'center center',
+            ...customStyles,
           }}
           className={`relative shadow-2xl rounded-xl overflow-hidden border shrink-0 ${
-            isLightBg ? 'border-slate-300' : theme.borderClass
-          } ${font.fontClass} ${
-            slideBackground ? '' : theme.bgClass
+            isCustomTheme ? 'slide-custom-theme' : (isLightBg ? 'border-slate-300' : theme.borderClass)
+          } ${isCustomTheme ? '' : font.fontClass} ${
+            slideBackground ? '' : (isCustomTheme ? '' : theme.bgClass)
           } ${isLightBg ? 'theme-light' : 'theme-dark dark'} flex flex-col transition-all duration-300`}
         >
           {/* Custom Background if specified */}
@@ -561,7 +578,7 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
                 className="h-full transition-all duration-300"
                 style={{
                   width: `${((currentIndex + 1) / slides.length) * 100}%`,
-                  backgroundColor: theme.accentColor,
+                  backgroundColor: theme.customColors?.accent || theme.accentColor,
                 }}
               />
             </div>

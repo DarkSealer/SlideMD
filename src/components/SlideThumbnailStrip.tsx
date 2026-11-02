@@ -1,6 +1,6 @@
 import React from 'react';
 import { SlideContent, PresentationSettings } from '../types/presentation';
-import { THEMES } from '../utils/themes';
+import { THEMES, resolveTheme } from '../utils/themes';
 
 interface SlideThumbnailStripProps {
   slides: SlideContent[];
@@ -15,7 +15,7 @@ export const SlideThumbnailStrip: React.FC<SlideThumbnailStripProps> = ({
   onSelectSlide,
   settings,
 }) => {
-  const theme = THEMES[settings.theme] || THEMES.obsidian;
+  const theme = resolveTheme(settings);
 
   return (
     <div className="h-20 bg-slate-950/95 border-t border-slate-800/80 px-4 flex items-center gap-3 overflow-x-auto select-none shrink-0 z-10 no-scrollbar">
