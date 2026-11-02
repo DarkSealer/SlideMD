@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Bold,
   Italic,
@@ -79,6 +80,8 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
   const [showTypeMenu, setShowTypeMenu] = useState(false);
   const [showInsertMenu, setShowInsertMenu] = useState(false);
   const [customHex, setCustomHex] = useState('#38bdf8');
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const [measuredWidth, setMeasuredWidth] = useState(390);
 
   const currentType = activeFormatting?.blockType || activeBlock?.type || 'p';
   const isNonTextBlock = NON_TEXT_BLOCKS.has(currentType);
@@ -94,35 +97,45 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
     activeFormatting?.color || activeFormatting?.computedColor || '#f1f5f9';
   const hasExplicitColor = Boolean(activeFormatting?.color);
 
-  // Sync customHex input with the currently inspected element's color when selection changes
   useEffect(() => {
     if (activeHexColor && activeHexColor.startsWith('#')) {
       setCustomHex(activeHexColor);
     }
   }, [activeHexColor]);
 
-  // Clamp toolbar coordinates so it floats cleanly above or below the target element and stays inside the viewport
-  const toolbarWidth = 540;
-  const toolbarHeight = 76;
+  useLayoutEffect(() => {
+    if (toolbarRef.current) {
+      setMeasuredWidth(toolbarRef.current.offsetWidth || 390);
+    }
+  }, [activeFormatting, currentType]);
+
   const padding = 12;
+  let left = position.x + position.width / 2 - measuredWidth / 2;
+  left = Math.max(padding, Math.min(window.innerWidth - measuredWidth - padding, left));
 
-  let left = position.x + position.width / 2 - toolbarWidth / 2;
-  left = Math.max(padding, Math.min(window.innerWidth - toolbarWidth - padding, left));
+  // Place above the selected element using translateY(-100%) so the bottom edge of the toolbar
+  // is guaranteed to sit 14px above the element and NEVER cover the text being edited.
+  // If the element is too close to the top header (< 165px), place cleanly 14px below the element.
+  const placeAbove = position.y > 165;
+  const anchorTop = placeAbove
+    ? position.y - 14
+    : Math.min(window.innerHeight - 80, position.y + position.height + 14);
 
-  let top = position.y - toolbarHeight - 12;
-  if (top < 60) {
-    top = position.y + position.height + 12;
-  }
+  // Open popovers upward when there is room above so popovers don't cover the active text either
+  const openMenusUpward = placeAbove && position.y > 310;
+  const menuPositionClass = openMenusUpward ? 'bottom-full mb-1.5' : 'top-full mt-1.5';
 
-  return (
+  const toolbarContent = (
     <div
+      ref={toolbarRef}
       style={{
         position: 'fixed',
         left: `${left}px`,
-        top: `${top}px`,
-        zIndex: 100,
+        top: `${anchorTop}px`,
+        transform: placeAbove ? 'translateY(-100%)' : 'none',
+        zIndex: 9999,
       }}
-      className="floating-format-toolbar flex flex-col bg-slate-900/95 border border-slate-700/80 rounded-xl shadow-2xl backdrop-blur-md text-slate-200 text-xs animate-in fade-in zoom-in-95 duration-150 select-none"
+      className="floating-format-toolbar flex flex-col bg-slate-900/95 border border-slate-700/90 rounded-lg shadow-[0_12px_32px_rgba(0,0,0,0.65)] backdrop-blur-md text-slate-100 text-[11px] select-none"
       onMouseDown={(e) => {
         // Prevent losing selection in the contentEditable element unless interacting with color hex input
         if ((e.target as HTMLElement).tagName !== 'INPUT') {
@@ -130,10 +143,10 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
         }
       }}
     >
-      {/* Top Status Bar: Current Formatting Inspector */}
-      <div className="flex items-center justify-between gap-3 px-2.5 py-1 border-b border-slate-800/90 bg-slate-950/60 rounded-t-xl text-[10px] text-slate-400">
+      {/* Compact Status Bar: Current Formatting Inspector */}
+      <div className="flex items-center justify-between gap-2.5 px-2.5 py-1 border-b border-slate-800/90 bg-slate-950/75 rounded-t-lg text-[10px] text-slate-300">
         <div className="flex items-center gap-1.5 min-w-0">
-          <span className="font-semibold text-indigo-400 uppercase tracking-wider">
+          <span className="font-bold text-indigo-400 uppercase tracking-wider">
             {activeFormatting?.tagLabel || currentType.toUpperCase()}
           </span>
           {activeFormatting?.fontSize && (
@@ -148,7 +161,7 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
             <>
               <span className="text-slate-600">•</span>
               <span
-                className="truncate max-w-[130px] text-cyan-300 italic"
+                className="truncate max-w-[120px] text-cyan-300 italic"
                 title={`Selected text: "${activeFormatting.selectedText}"`}
               >
                 &ldquo;{activeFormatting.selectedText}&rdquo;
@@ -161,10 +174,10 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
         <div className="flex items-center gap-1 shrink-0">
           {(isBoldActive || isComputedBold) && (
             <span
-              className={`px-1.5 py-0.2 rounded font-semibold ${
+              className={`px-1.5 py-0.2 rounded text-[10px] font-semibold ${
                 isBoldActive
-                  ? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/40'
-                  : 'bg-slate-800 text-slate-300'
+                  ? 'bg-indigo-500/30 text-indigo-200 border border-indigo-400/40'
+                  : 'bg-slate-800 text-slate-300 border border-slate-700/80'
               }`}
               title={isBoldActive ? 'Explicit Bold (**text**)' : 'Heading Default Bold'}
             >
@@ -172,27 +185,27 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
             </span>
           )}
           {(isItalicActive || isComputedItalic) && (
-            <span className="px-1.5 py-0.2 rounded bg-indigo-500/25 text-indigo-300 border border-indigo-500/40 font-semibold">
+            <span className="px-1.5 py-0.2 rounded text-[10px] bg-indigo-500/30 text-indigo-200 border border-indigo-400/40 font-semibold">
               Italic
             </span>
           )}
           {isStrikeActive && (
-            <span className="px-1.5 py-0.2 rounded bg-indigo-500/25 text-indigo-300 border border-indigo-500/40 font-semibold">
+            <span className="px-1.5 py-0.2 rounded text-[10px] bg-indigo-500/30 text-indigo-200 border border-indigo-400/40 font-semibold">
               Strike
             </span>
           )}
           {isCodeActive && (
-            <span className="px-1.5 py-0.2 rounded bg-indigo-500/25 text-indigo-300 border border-indigo-500/40 font-mono">
+            <span className="px-1.5 py-0.2 rounded text-[10px] bg-indigo-500/30 text-indigo-200 border border-indigo-400/40 font-mono">
               Code
             </span>
           )}
           {!isNonTextBlock && (
             <span
-              className="flex items-center gap-1 px-1.5 py-0.2 rounded bg-slate-800/90 border border-slate-700/80 font-mono text-slate-300"
+              className="flex items-center gap-1 px-1.5 py-0.2 rounded bg-slate-800/90 border border-slate-700/80 font-mono text-[10px] text-slate-200"
               title={hasExplicitColor ? `Custom Color: ${activeHexColor}` : `Theme Color: ${activeHexColor}`}
             >
               <span
-                className="w-2 h-2 rounded-full border border-white/30"
+                className="w-2 h-2 rounded-full border border-white/40 shrink-0"
                 style={{ backgroundColor: activeHexColor }}
               />
               {activeHexColor}
@@ -202,7 +215,7 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
       </div>
 
       {/* Main Action Controls Row */}
-      <div className="flex items-center gap-1 p-1">
+      <div className="flex items-center gap-0.5 px-1.5 py-1">
         {/* Block Type Dropdown Toggle */}
         <div className="relative">
           <button
@@ -213,7 +226,7 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
               setShowInsertMenu(false);
             }}
             disabled={isNonTextBlock}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-slate-800 text-slate-200 font-medium hover:text-white disabled:opacity-50 disabled:pointer-events-none transition-colors"
+            className="flex items-center gap-1 px-2 py-1 rounded-md bg-slate-800/70 hover:bg-slate-800 border border-slate-700/70 text-slate-100 font-semibold hover:text-white disabled:opacity-50 disabled:pointer-events-none transition-colors"
             title="Change Block Heading or Type"
           >
             {currentType === 'h1' && <Heading1 className="w-3.5 h-3.5 text-indigo-400" />}
@@ -221,22 +234,22 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
             {(currentType === 'h3' || currentType === 'h4') && (
               <Heading3 className="w-3.5 h-3.5 text-emerald-400" />
             )}
-            {currentType === 'p' && <Pilcrow className="w-3.5 h-3.5 text-slate-400" />}
+            {currentType === 'p' && <Pilcrow className="w-3.5 h-3.5 text-slate-300" />}
             {currentType === 'list' && <List className="w-3.5 h-3.5 text-amber-400" />}
             {(currentType === 'quote' || currentType === 'callout') && (
               <Quote className="w-3.5 h-3.5 text-purple-400" />
             )}
             {isNonTextBlock && <Box className="w-3.5 h-3.5 text-sky-400" />}
-            <span className="uppercase text-[11px] font-semibold">{currentType}</span>
+            <span className="uppercase text-[11px] font-bold">{currentType}</span>
           </button>
 
           {showTypeMenu && !isNonTextBlock && (
-            <div className="absolute top-full left-0 mt-1.5 w-44 bg-slate-900 border border-slate-700 rounded-lg shadow-xl py-1 z-50 text-xs">
+            <div className={`absolute ${menuPositionClass} left-0 w-44 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl py-1 z-50 text-xs`}>
               {[
                 { type: 'h1' as const, label: 'Heading 1 (#)', icon: Heading1, color: 'text-indigo-400' },
                 { type: 'h2' as const, label: 'Heading 2 (##)', icon: Heading2, color: 'text-cyan-400' },
                 { type: 'h3' as const, label: 'Heading 3 (###)', icon: Heading3, color: 'text-emerald-400' },
-                { type: 'p' as const, label: 'Paragraph (Body)', icon: Pilcrow, color: 'text-slate-400' },
+                { type: 'p' as const, label: 'Paragraph (Body)', icon: Pilcrow, color: 'text-slate-300' },
                 { type: 'list' as const, label: 'Bullet List (- )', icon: List, color: 'text-amber-400' },
                 { type: 'quote' as const, label: 'Quote Block (>)', icon: Quote, color: 'text-purple-400' },
               ].map((item) => {
@@ -249,8 +262,8 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
                       onChangeBlockType(item.type);
                       setShowTypeMenu(false);
                     }}
-                    className={`w-full flex items-center justify-between px-3 py-1.5 hover:bg-slate-800 text-left ${
-                      isSelected ? 'bg-indigo-600/20 text-white font-semibold' : 'text-slate-300 hover:text-white'
+                    className={`w-full flex items-center justify-between px-2.5 py-1.5 hover:bg-slate-800 text-left ${
+                      isSelected ? 'bg-indigo-600/25 text-white font-semibold' : 'text-slate-200 hover:text-white'
                     }`}
                   >
                     <span className="flex items-center gap-2">
@@ -272,12 +285,12 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
           <button
             onClick={() => onFormatInline('bold')}
             disabled={isNonTextBlock}
-            className={`p-1.5 rounded-lg transition-colors disabled:opacity-30 disabled:pointer-events-none ${
+            className={`p-1.5 rounded-md transition-colors disabled:opacity-30 disabled:pointer-events-none ${
               isBoldActive
-                ? 'bg-indigo-600/35 text-indigo-200 border border-indigo-500/50 shadow-inner'
+                ? 'bg-indigo-600/40 text-white border border-indigo-400/60 shadow-inner'
                 : isComputedBold
-                ? 'bg-slate-800/80 text-indigo-300 border border-slate-700'
-                : 'hover:bg-slate-800 text-slate-300 hover:text-white'
+                ? 'bg-slate-800 text-indigo-300 border border-slate-700'
+                : 'hover:bg-slate-800 text-slate-200 hover:text-white'
             }`}
             title={
               isBoldActive
@@ -290,10 +303,10 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
           <button
             onClick={() => onFormatInline('italic')}
             disabled={isNonTextBlock}
-            className={`p-1.5 rounded-lg transition-colors disabled:opacity-30 disabled:pointer-events-none ${
+            className={`p-1.5 rounded-md transition-colors disabled:opacity-30 disabled:pointer-events-none ${
               isItalicActive || isComputedItalic
-                ? 'bg-indigo-600/35 text-indigo-200 border border-indigo-500/50 shadow-inner'
-                : 'hover:bg-slate-800 text-slate-300 hover:text-white'
+                ? 'bg-indigo-600/40 text-white border border-indigo-400/60 shadow-inner'
+                : 'hover:bg-slate-800 text-slate-200 hover:text-white'
             }`}
             title={
               isItalicActive
@@ -306,10 +319,10 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
           <button
             onClick={() => onFormatInline('strike')}
             disabled={isNonTextBlock}
-            className={`p-1.5 rounded-lg transition-colors disabled:opacity-30 disabled:pointer-events-none ${
+            className={`p-1.5 rounded-md transition-colors disabled:opacity-30 disabled:pointer-events-none ${
               isStrikeActive
-                ? 'bg-indigo-600/35 text-indigo-200 border border-indigo-500/50 shadow-inner'
-                : 'hover:bg-slate-800 text-slate-300 hover:text-white'
+                ? 'bg-indigo-600/40 text-white border border-indigo-400/60 shadow-inner'
+                : 'hover:bg-slate-800 text-slate-200 hover:text-white'
             }`}
             title={
               isStrikeActive
@@ -322,10 +335,10 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
           <button
             onClick={() => onFormatInline('code')}
             disabled={isNonTextBlock}
-            className={`p-1.5 rounded-lg transition-colors disabled:opacity-30 disabled:pointer-events-none ${
+            className={`p-1.5 rounded-md transition-colors disabled:opacity-30 disabled:pointer-events-none ${
               isCodeActive
-                ? 'bg-indigo-600/35 text-indigo-200 border border-indigo-500/50 shadow-inner'
-                : 'hover:bg-slate-800 text-slate-300 hover:text-white'
+                ? 'bg-indigo-600/40 text-white border border-indigo-400/60 shadow-inner'
+                : 'hover:bg-slate-800 text-slate-200 hover:text-white'
             }`}
             title={
               isCodeActive
@@ -349,24 +362,24 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
               setShowInsertMenu(false);
             }}
             disabled={isNonTextBlock}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors disabled:opacity-30 disabled:pointer-events-none ${
+            className={`flex items-center gap-1 px-2 py-1 rounded-md transition-colors disabled:opacity-30 disabled:pointer-events-none ${
               hasExplicitColor
                 ? 'bg-slate-800 text-white border border-slate-600'
-                : 'hover:bg-slate-800 text-slate-300 hover:text-white'
+                : 'hover:bg-slate-800 text-slate-200 hover:text-white'
             }`}
             title={`Current Text Color: ${activeHexColor}`}
           >
             <Palette className="w-3.5 h-3.5 text-cyan-400" />
             <span
-              className="w-3 h-3 rounded-full border border-white/30 shadow-sm"
+              className="w-3 h-3 rounded-full border border-white/40 shadow-sm"
               style={{ backgroundColor: activeHexColor }}
             />
           </button>
 
           {showColorPopover && !isNonTextBlock && (
-            <div className="absolute top-full left-0 mt-1.5 w-52 bg-slate-900 border border-slate-700 rounded-lg shadow-xl p-2.5 z-50 text-xs">
+            <div className={`absolute ${menuPositionClass} left-0 w-52 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl p-2.5 z-50 text-xs`}>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">
+                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider">
                   Text Color
                 </span>
                 {hasExplicitColor && (
@@ -375,7 +388,7 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
                       onChangeTextColor(null);
                       setShowColorPopover(false);
                     }}
-                    className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-rose-400 transition-colors"
+                    className="flex items-center gap-1 text-[10px] text-slate-300 hover:text-rose-400 transition-colors font-medium"
                     title="Reset to default theme color"
                   >
                     <RotateCcw className="w-2.5 h-2.5" />
@@ -397,8 +410,8 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
                       }}
                       className={`w-6 h-6 rounded-md border hover:scale-110 transition-transform shadow-sm flex items-center justify-center ${
                         isCurrentColor
-                          ? 'border-white ring-2 ring-indigo-500/80 scale-105'
-                          : 'border-white/20'
+                          ? 'border-white ring-2 ring-indigo-500 scale-105'
+                          : 'border-white/25'
                       }`}
                       style={{ backgroundColor: c.value }}
                       title={`${c.name} (${c.value})`}
@@ -426,14 +439,14 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
                   type="text"
                   value={customHex}
                   onChange={(e) => setCustomHex(e.target.value)}
-                  className="flex-1 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-[11px] font-mono text-slate-200"
+                  className="flex-1 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-[11px] font-mono text-slate-100"
                 />
                 <button
                   onClick={() => {
                     onChangeTextColor(customHex);
                     setShowColorPopover(false);
                   }}
-                  className="px-2 py-0.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-[10px] font-medium"
+                  className="px-2 py-0.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-[11px] font-semibold"
                 >
                   Apply
                 </button>
@@ -449,7 +462,7 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
           <button
             onClick={() => onMoveBlock('up')}
             disabled={blockIndex <= 0}
-            className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
+            className="p-1.5 rounded-md hover:bg-slate-800 text-slate-200 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
             title="Move Block Up (↑)"
           >
             <ChevronUp className="w-3.5 h-3.5" />
@@ -457,7 +470,7 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
           <button
             onClick={() => onMoveBlock('down')}
             disabled={blockIndex >= totalBlocks - 1}
-            className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
+            className="p-1.5 rounded-md hover:bg-slate-800 text-slate-200 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
             title="Move Block Down (↓)"
           >
             <ChevronDown className="w-3.5 h-3.5" />
@@ -471,20 +484,20 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
                 setShowTypeMenu(false);
                 setShowColorPopover(false);
               }}
-              className="p-1.5 rounded-lg hover:bg-slate-800 text-emerald-400 hover:text-emerald-300 transition-colors"
+              className="p-1.5 rounded-md hover:bg-slate-800 text-emerald-400 hover:text-emerald-300 transition-colors"
               title="Insert Block Below (+)"
             >
               <Plus className="w-3.5 h-3.5" />
             </button>
 
             {showInsertMenu && (
-              <div className="absolute top-full left-0 mt-1.5 w-36 bg-slate-900 border border-slate-700 rounded-lg shadow-xl py-1 z-50 text-xs">
+              <div className={`absolute ${menuPositionClass} left-0 w-36 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl py-1 z-50 text-xs`}>
                 <button
                   onClick={() => {
                     onInsertBlock('h2');
                     setShowInsertMenu(false);
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white text-left"
+                  className="w-full flex items-center gap-2 px-2.5 py-1.5 hover:bg-slate-800 text-slate-200 hover:text-white text-left"
                 >
                   <Heading2 className="w-3.5 h-3.5 text-cyan-400" />
                   <span>Heading</span>
@@ -494,9 +507,9 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
                     onInsertBlock('p');
                     setShowInsertMenu(false);
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white text-left"
+                  className="w-full flex items-center gap-2 px-2.5 py-1.5 hover:bg-slate-800 text-slate-200 hover:text-white text-left"
                 >
-                  <Pilcrow className="w-3.5 h-3.5 text-slate-400" />
+                  <Pilcrow className="w-3.5 h-3.5 text-slate-300" />
                   <span>Paragraph</span>
                 </button>
                 <button
@@ -504,7 +517,7 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
                     onInsertBlock('list');
                     setShowInsertMenu(false);
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white text-left"
+                  className="w-full flex items-center gap-2 px-2.5 py-1.5 hover:bg-slate-800 text-slate-200 hover:text-white text-left"
                 >
                   <List className="w-3.5 h-3.5 text-amber-400" />
                   <span>Bullet List</span>
@@ -516,7 +529,7 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
           {/* Delete Block */}
           <button
             onClick={onDeleteBlock}
-            className="p-1.5 rounded-lg hover:bg-red-950/60 text-slate-400 hover:text-red-400 transition-colors"
+            className="p-1.5 rounded-md hover:bg-red-950/70 text-slate-300 hover:text-red-400 transition-colors"
             title="Delete Block"
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -530,7 +543,7 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
           <button
             onClick={onUndo}
             disabled={!canUndo}
-            className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
+            className="p-1.5 rounded-md hover:bg-slate-800 text-slate-200 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
             title="Undo last change (Ctrl+Z)"
           >
             <Undo2 className="w-3.5 h-3.5" />
@@ -538,7 +551,7 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
           <button
             onClick={onRedo}
             disabled={!canRedo}
-            className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
+            className="p-1.5 rounded-md hover:bg-slate-800 text-slate-200 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
             title="Redo (Ctrl+Y)"
           >
             <Redo2 className="w-3.5 h-3.5" />
@@ -550,7 +563,7 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
         {/* Done / Close Button */}
         <button
           onClick={onClose}
-          className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+          className="p-1.5 rounded-md hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
           title="Done Editing (Escape)"
         >
           <X className="w-3.5 h-3.5" />
@@ -558,4 +571,10 @@ export const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({
       </div>
     </div>
   );
+
+  if (typeof document !== 'undefined') {
+    return createPortal(toolbarContent, document.body);
+  }
+
+  return toolbarContent;
 };
