@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 /**
  * POST /api/contact — Vercel serverless function.
  *

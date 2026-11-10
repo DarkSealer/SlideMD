@@ -1,0 +1,17 @@
+{
+  // Used by Vercel's function builder (and editors) for files in api/.
+  // The builder compiles from a temp directory, where the root config's
+  // `types` entries (vite/client, vite-plugin-pwa/client) cannot be resolved,
+  // so this config lists none. Node types come from the reference in each file.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": [],
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["./**/*.ts"]
+}
