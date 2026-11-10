@@ -13,6 +13,7 @@ import {
   WifiOff,
   Undo2,
   Redo2,
+  LifeBuoy,
 } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
@@ -26,6 +27,7 @@ interface TopNavProps {
   onOpenDecks: () => void;
   onOpenExport: () => void;
   onOpenGuide: () => void;
+  onOpenContact: () => void;
   onStartPresenting: () => void;
   onOpenPresenterConsole: () => void;
   totalSlides: number;
@@ -46,6 +48,7 @@ export const TopNav: React.FC<TopNavProps> = ({
   onOpenDecks,
   onOpenExport,
   onOpenGuide,
+  onOpenContact,
   onStartPresenting,
   onOpenPresenterConsole,
   totalSlides,
@@ -228,6 +231,16 @@ export const TopNav: React.FC<TopNavProps> = ({
         >
           <Download className="w-3.5 h-3.5 text-cyan-400" />
           <span className="hidden md:inline">Export</span>
+        </button>
+
+        {/* The footer (and its contact link) is hidden below md, so expose it here on small screens */}
+        <button
+          onClick={onOpenContact}
+          className="md:hidden flex items-center px-2 py-1.5 text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 rounded-lg border border-slate-800 transition-colors"
+          title="Report a bug, share feedback, or contact us"
+          aria-label="Report a bug or contact us"
+        >
+          <LifeBuoy className="w-3.5 h-3.5 text-rose-400" />
         </button>
 
         <div className="flex items-center shrink-0">

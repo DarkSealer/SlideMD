@@ -1,6 +1,11 @@
 import React from 'react';
+import { LifeBuoy } from 'lucide-react';
 
-export const AppFooter: React.FC = () => (
+interface AppFooterProps {
+  onOpenContact: () => void;
+}
+
+export const AppFooter: React.FC<AppFooterProps> = ({ onOpenContact }) => (
   <footer className="hidden md:flex h-10 px-4 md:px-6 items-center justify-between border-t border-slate-900 bg-slate-950 text-xs text-slate-500 shrink-0 select-none">
     <span>
       Created by{' '}
@@ -14,6 +19,14 @@ export const AppFooter: React.FC = () => (
       </a>
     </span>
     <div className="flex items-center gap-3">
+      <button
+        onClick={onOpenContact}
+        className="flex items-center gap-1.5 text-slate-400 font-medium hover:text-slate-200 transition-colors"
+        title="Report a bug, share feedback, or contact us"
+      >
+        <LifeBuoy className="w-3.5 h-3.5" />
+        <span>Report a bug / Contact</span>
+      </button>
       <a
         href="https://www.producthunt.com/products/slidemd?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-slidemd"
         target="_blank"
