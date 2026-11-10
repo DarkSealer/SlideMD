@@ -141,16 +141,14 @@ export async function POST(request: Request): Promise<Response> {
     return json(400, { ok: false, error: 'invalid_message' });
   }
 
-  let replyTo: string | undefined;
-  if (payload.email !== undefined && payload.email !== null && payload.email !== '') {
-    if (typeof payload.email !== 'string') {
-      return json(400, { ok: false, error: 'invalid_email' });
-    }
-    const email = payload.email.trim();
-    if (email.length > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.test(email)) {
-      return json(400, { ok: false, error: 'invalid_email' });
-    }
-    replyTo = email;
+  // Required, so every report can be answered. Note this only checks the
+  // format: the address is whatever the sender typed, not a verified identity.
+  if (typeof payload.email !== 'string') {
+    return json(400, { ok: false, error: 'invalid_email' });
+  }
+  const replyTo = payload.email.trim();
+  if (replyTo.length > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.test(replyTo)) {
+    return json(400, { ok: false, error: 'invalid_email' });
   }
 
   const apiKey = process.env.RESEND_API_KEY;
@@ -168,7 +166,7 @@ export async function POST(request: Request): Promise<Response> {
     '',
     '---',
     `Type: ${type}`,
-    `Reply to: ${replyTo ?? '(not provided)'}`,
+    `From: ${replyTo}`,
     `Page: ${cleanLine(typeof payload.page === 'string' ? payload.page : '', 200) || '(unknown)'}`,
     `User agent: ${cleanLine(request.headers.get('user-agent') ?? '', 300) || '(unknown)'}`,
     `Sent: ${new Date().toISOString()}`,
@@ -188,7 +186,7 @@ export async function POST(request: Request): Promise<Response> {
         to: [to],
         subject: SUBJECTS[type as ContactType],
         text,
-        ...(replyTo ? { reply_to: replyTo } : {}),
+        reply_to: replyTo,
       }),
       signal: AbortSignal.timeout(8_000),
     });

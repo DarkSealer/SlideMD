@@ -12,6 +12,7 @@ type Status = 'idle' | 'sending' | 'sent' | 'error';
 // Keep in sync with the limits enforced in api/contact.ts
 const MIN_MESSAGE_LENGTH = 10;
 const MAX_MESSAGE_LENGTH = 4000;
+const EMAIL_PATTERN = /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[^\s@<>"',;]+$/;
 
 const TYPES: { id: ContactType; label: string; icon: React.ReactNode; placeholder: string }[] = [
   {
@@ -36,7 +37,7 @@ const TYPES: { id: ContactType; label: string; icon: React.ReactNode; placeholde
 
 const ERROR_MESSAGES: Record<string, string> = {
   rate_limited: 'Too many messages in a short time. Please try again in a few minutes.',
-  invalid_email: 'That email address does not look right.',
+  invalid_email: 'Please enter a valid email address.',
   invalid_message: `Your message must be between ${MIN_MESSAGE_LENGTH} and ${MAX_MESSAGE_LENGTH} characters.`,
 };
 const GENERIC_ERROR = 'We could not send your message. Please try again in a moment.';
@@ -59,7 +60,10 @@ export const ContactModal: React.FC<ContactModalProps> = ({ onClose }) => {
   }, [onClose]);
 
   const trimmedLength = message.trim().length;
-  const canSubmit = isOnline && status !== 'sending' && trimmedLength >= MIN_MESSAGE_LENGTH;
+  const trimmedEmail = email.trim();
+  const isEmailValid = EMAIL_PATTERN.test(trimmedEmail);
+  const canSubmit =
+    isOnline && status !== 'sending' && trimmedLength >= MIN_MESSAGE_LENGTH && isEmailValid;
   const activeType = TYPES.find((t) => t.id === type) ?? TYPES[0];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -75,7 +79,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({ onClose }) => {
         body: JSON.stringify({
           type,
           message: message.trim(),
-          email: email.trim(),
+          email: trimmedEmail,
           website,
           // Path only: the query string and hash can carry shared deck content.
           page: window.location.pathname,
@@ -134,8 +138,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({ onClose }) => {
             <CheckCircle2 className="w-10 h-10 text-emerald-400" />
             <h3 className="text-sm font-semibold text-white">Message sent</h3>
             <p className="text-xs text-slate-400 max-w-xs">
-              Thanks for taking the time.{' '}
-              {email.trim() ? 'We will reply to the address you provided.' : 'We read every message.'}
+              Thanks for taking the time. If we need to follow up, we will reply to {trimmedEmail}.
             </p>
             <button
               onClick={onClose}
@@ -198,7 +201,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({ onClose }) => {
             {/* Reply email */}
             <div>
               <label htmlFor="contact-email" className="block text-xs font-medium text-slate-300 mb-1.5">
-                Your email <span className="text-slate-500 font-normal">(optional, only if you want a reply)</span>
+                Your email <span className="text-slate-500 font-normal">(so we can reply)</span>
               </label>
               <input
                 id="contact-email"
@@ -207,9 +210,13 @@ export const ContactModal: React.FC<ContactModalProps> = ({ onClose }) => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 maxLength={254}
+                required
                 autoComplete="email"
                 className="w-full px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:outline-none rounded-lg"
               />
+              {trimmedEmail !== '' && !isEmailValid && (
+                <p className="mt-1 text-[11px] text-slate-500">Enter a valid email address</p>
+              )}
             </div>
 
             {/* Honeypot: hidden from people and assistive tech, bots tend to fill it */}
