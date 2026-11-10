@@ -22,6 +22,7 @@ import { ExportModal } from './components/ExportModal';
 import { ThemeSettingsPanel } from './components/ThemeSettingsPanel';
 import { DecksLibraryModal } from './components/DecksLibraryModal';
 import { PresentationGuideModal } from './components/PresentationGuideModal';
+import { ContactModal } from './components/ContactModal';
 import { AudiencePresentationView } from './components/AudiencePresentationView';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { isAudienceWindow, launchAudienceWindow } from './utils/presenterSync';
@@ -39,6 +40,7 @@ export default function App() {
   const [showDecksModal, setShowDecksModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
   const [guideInitialTab, setGuideInitialTab] = useState<'tools' | 'tour' | 'design' | 'shortcuts' | 'markdown'>('tools');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showPresenterConsole, setShowPresenterConsole] = useState(false);
@@ -332,6 +334,7 @@ export default function App() {
         onOpenDecks={() => setShowDecksModal(true)}
         onOpenExport={() => setShowExportModal(true)}
         onOpenGuide={() => handleOpenGuide('tools')}
+        onOpenContact={() => setShowContactModal(true)}
         onStartPresenting={() => setIsFullscreen(true)}
         onOpenPresenterConsole={() => setShowPresenterConsole(true)}
         totalSlides={slides.length}
@@ -441,7 +444,7 @@ export default function App() {
         />
       )}
 
-      <AppFooter />
+      <AppFooter onOpenContact={() => setShowContactModal(true)} />
 
       {/* Fullscreen Conference Presentation Mode */}
       {isFullscreen && (
@@ -509,6 +512,9 @@ export default function App() {
           onInsertSnippet={handleInsertSnippetFromGuide}
         />
       )}
+
+      {/* Bug Report / Feedback / Contact Modal (sends via /api/contact) */}
+      {showContactModal && <ContactModal onClose={() => setShowContactModal(false)} />}
 
       {/* Non-intrusive Offline Toast Indicator */}
       <OfflineIndicator />
